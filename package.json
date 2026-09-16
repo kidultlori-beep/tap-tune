@@ -1,0 +1,10 @@
+{
+  "name": "tap-tune",
+  "private": true,
+  "description": "Finger Garden (手势花园) — static camera garden. Repo name tap-tune.",
+  "type": "module",
+  "scripts": {
+    "start": "python3 -m http.server 8080",
+    "check": "node js/check.js"
+  }
+}
