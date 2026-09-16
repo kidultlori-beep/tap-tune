@@ -4,6 +4,15 @@ import { MEDIAPIPE } from "./config.js";
 import { getContainedRect, landmarkToScreen } from "./camera.js";
 import { collectTips, handScale } from "./pinch.js";
 
+export function hasWebGL() {
+  try {
+    const c = document.createElement("canvas");
+    return !!(c.getContext("webgl") || c.getContext("webgl2"));
+  } catch {
+    return false;
+  }
+}
+
 export class HandsTracker {
   constructor({ video, onHands, onStatus }) {
     this.video = video;

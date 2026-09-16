@@ -9,7 +9,7 @@ import { CameraFeed, isDemoQuery, isFastQuery } from "./camera.js";
 import { PinchDetector } from "./pinch.js";
 import { Garden } from "./garden.js";
 import { Overlays } from "./overlays.js";
-import { HandsTracker } from "./hands-tracker.js";
+import { HandsTracker, hasWebGL } from "./hands-tracker.js";
 import { DemoHands } from "./demo.js";
 import { createFX } from "./fx.js";
 
@@ -97,14 +97,13 @@ function setHudBloom() {
   ui.bloomCount.textContent = String(garden.bloomCount);
 }
 
-function enterGardenChrome(isDemo) {
+function enterGardenChrome({ demo = false, keepCamera = false } = {}) {
   ui.start.classList.add("is-hidden");
   ui.hud.hidden = false;
-  ui.app.classList.toggle("is-demo", isDemo);
-  ui.demoDock.hidden = !isDemo;
-  ui.video.classList.toggle("is-off", isDemo);
-  if (isDemo) ui.stage.classList.add("demo-stage");
-  else ui.stage.classList.remove("demo-stage");
+  ui.app.classList.toggle("is-demo", demo && !keepCamera);
+  ui.demoDock.hidden = !demo;
+  ui.video.classList.toggle("is-off", !keepCamera);
+  ui.stage.classList.toggle("demo-stage", !keepCamera);
 }
 
 function sowFromPinch(event) {
@@ -199,6 +198,9 @@ async function startLive() {
   }
 
   try {
+    if (!hasWebGL() || typeof window.Hands !== "function") {
+      throw new Error("hands-unavailable");
+    }
     tracker = new HandsTracker({
       video: ui.video,
       onHands: ({ hands }) => {
@@ -209,19 +211,15 @@ async function startLive() {
     await tracker.init();
   } catch (err) {
     console.warn(err);
-    camera.stop();
-    ui.btnStart.disabled = false;
-    ui.fallback.hidden = false;
-    ui.fallback.innerHTML =
-      "手势模型未能加载。可改用演示模式继续赏花。";
-    ui.btnRetry.hidden = false;
-    ui.btnStart.hidden = true;
-    setStatus("");
+    mode = "hybrid";
+    enterGardenChrome({ demo: true, keepCamera: true });
+    beginLoop();
+    toast("手势追踪不可用，摄像头仍可作为花园背景；点击花种播种");
     return;
   }
 
   mode = "live";
-  enterGardenChrome(false);
+  enterGardenChrome({ demo: false, keepCamera: true });
   tracker.start();
   beginLoop();
   toast("对着镜头，捏合拇指与手指播种");
@@ -235,14 +233,14 @@ function beginLoop() {
 }
 
 async function startDemo(fromQuery = false) {
-  await audio.unlock();
+  if (!fromQuery) await audio.unlock();
   await bootFX();
   if (camera) camera.stop();
   if (tracker) tracker.stop();
   pinch.reset();
   demo = new DemoHands();
   mode = "demo";
-  enterGardenChrome(true);
+  enterGardenChrome({ demo: true, keepCamera: false });
   beginLoop();
   toast(fromQuery ? "演示模式 /?demo=1" : "演示模式：点击花种或等待自动捏合");
 }
@@ -277,6 +275,9 @@ function buildDemoDock() {
 }
 
 function bind() {
+  window.alert = (msg) => {
+    console.warn("[alert]", msg);
+  };
   ui.btnStart.addEventListener("click", () => startLive());
   ui.btnDemo.addEventListener("click", () => startDemo(false));
   ui.btnRetry.addEventListener("click", () => {
@@ -308,7 +309,7 @@ function bind() {
   );
 
   ui.stage.addEventListener("pointerdown", async (e) => {
-    if (mode !== "demo") return;
+    if (mode === "live") return;
     if (e.target.closest("button")) return;
     await audio.unlock();
     const keys = FINGER_TYPES;
@@ -324,6 +325,27 @@ function bind() {
 
   buildDemoDock();
   layout();
+
+  window.FingerGarden = {
+    get mode() {
+      return mode;
+    },
+    get bloomCount() {
+      return garden.bloomCount;
+    },
+    get fxMode() {
+      return fx?.mode || null;
+    },
+    sow(key, x, y) {
+      return sowFromPinch({
+        key,
+        x: x ?? window.innerWidth * 0.5,
+        y: y ?? window.innerHeight * 0.5,
+        hand: key.split("-")[0],
+        finger: key.split("-")[1],
+      });
+    },
+  };
 
   if (isDemoQuery()) {
     startDemo(true);

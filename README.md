@@ -45,7 +45,7 @@ Loaded from jsDelivr, no npm install:
 
 Hand tracking uses the **script-tag + globals** Hands solution (not `@mediapipe/tasks-vision` ESM). WASM / tflite files are resolved with `Hands({ locateFile })` on the same CDN.
 
-If WebGL is missing, sparkle/petal bursts fall back to a 2D canvas so sow / bloom / wind effects still show.
+If WebGL is missing, sparkle/petal bursts fall back to a 2D canvas so sow / bloom / wind effects still show. Hand tracking also needs WebGL (MediaPipe GPU graph); without it the live camera can still be the background and the demo seed dock stays available — no `alert()`.
 
 ## Finger → emoji → pitch
 
