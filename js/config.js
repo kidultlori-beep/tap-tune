@@ -1,4 +1,4 @@
-/** Finger Garden — 手指 → 植物表情 → 音高 固定映射 */
+/** Finger Garden — finger type → plant emoji → pitch */
 
 export const TIP_INDEX = {
   thumb: 4,
@@ -17,6 +17,30 @@ export const FINGER_TYPES = HANDS.flatMap((hand) =>
   NON_THUMB_FINGERS.map((finger) => `${hand}-${finger}`)
 );
 
+/** Extra plant glyphs that can drop into the floor pile (plain Unicode only). */
+export const PLANT_POOL = [
+  "🌸",
+  "🌼",
+  "🌺",
+  "🌷",
+  "🌻",
+  "🌹",
+  "🪷",
+  "🌱",
+  "🌿",
+  "🍀",
+  "🍃",
+  "🌵",
+  "🌾",
+  "🍄",
+  "🪴",
+  "🌲",
+  "🌳",
+  "🌴",
+  "🎋",
+  "💮",
+];
+
 /**
  * Fixed mapping. MediaPipe handedness is the person's physical hand.
  * After selfie mirroring, the person's right hand appears on the right.
@@ -26,110 +50,86 @@ export const FINGER_MAP = {
     key: "Left-index",
     hand: "Left",
     finger: "index",
-    label: "左食指",
+    label: "Left index",
     emoji: "🌸",
+    extras: ["🌸", "🌱", "🍀"],
     note: "C5",
     freq: 523.25,
-    petal: "#f4a7c3",
-    petalHi: "#ffe4ef",
-    center: "#ffe08a",
-    stem: "#5d9b62",
   },
   "Left-middle": {
     key: "Left-middle",
     hand: "Left",
     finger: "middle",
-    label: "左中指",
+    label: "Left middle",
     emoji: "🌼",
+    extras: ["🌼", "🌿", "🌾"],
     note: "D5",
     freq: 587.33,
-    petal: "#ffe566",
-    petalHi: "#fff6c2",
-    center: "#e8a838",
-    stem: "#6aa85f",
   },
   "Left-ring": {
     key: "Left-ring",
     hand: "Left",
     finger: "ring",
-    label: "左无名指",
+    label: "Left ring",
     emoji: "🌺",
+    extras: ["🌺", "🍄", "🍃"],
     note: "E5",
     freq: 659.25,
-    petal: "#e85d8c",
-    petalHi: "#ffb3cc",
-    center: "#ffd36b",
-    stem: "#4f8f58",
   },
   "Left-pinky": {
     key: "Left-pinky",
     hand: "Left",
     finger: "pinky",
-    label: "左小指",
+    label: "Left pinky",
     emoji: "🌷",
+    extras: ["🌷", "🌵", "🌱"],
     note: "G5",
     freq: 783.99,
-    petal: "#e07090",
-    petalHi: "#ffd0dc",
-    center: "#8fbf6a",
-    stem: "#5b9a55",
   },
   "Right-index": {
     key: "Right-index",
     hand: "Right",
     finger: "index",
-    label: "右食指",
+    label: "Right index",
     emoji: "🌻",
+    extras: ["🌻", "🌳", "🌿"],
     note: "A5",
     freq: 880.0,
-    petal: "#f5c842",
-    petalHi: "#ffe9a0",
-    center: "#6b3f12",
-    stem: "#4e8a46",
   },
   "Right-middle": {
     key: "Right-middle",
     hand: "Right",
     finger: "middle",
-    label: "右中指",
+    label: "Right middle",
     emoji: "🌹",
+    extras: ["🌹", "🪴", "🍀"],
     note: "C6",
     freq: 1046.5,
-    petal: "#d9404a",
-    petalHi: "#ff9aa2",
-    center: "#ffd27a",
-    stem: "#3f7a44",
   },
   "Right-ring": {
     key: "Right-ring",
     hand: "Right",
     finger: "ring",
-    label: "右无名指",
+    label: "Right ring",
     emoji: "🪷",
+    extras: ["🪷", "🌲", "🍃"],
     note: "D6",
     freq: 1174.66,
-    petal: "#f3b6d0",
-    petalHi: "#ffe6f2",
-    center: "#f0d36c",
-    stem: "#5a9a6a",
   },
   "Right-pinky": {
     key: "Right-pinky",
     hand: "Right",
     finger: "pinky",
-    label: "右小指",
-    emoji: "💐",
+    label: "Right pinky",
+    emoji: "💮",
+    extras: ["💮", "🌴", "🎋"],
     note: "E6",
     freq: 1318.51,
-    petal: "#c9a0e8",
-    petalHi: "#ead9ff",
-    center: "#ffd56f",
-    stem: "#5d8f63",
   },
 };
 
 export const MILESTONE_EVERY = 20;
-export const MAX_PLANTS = 48;
+export const MAX_DROPS = 90;
 
 export const MEDIAPIPE = {
   handsVersion: "0.4.1675469240",
@@ -163,14 +163,14 @@ export function dist(ax, ay, bx, by) {
   return Math.hypot(dx, dy);
 }
 
-export function easeOutCubic(t) {
-  return 1 - (1 - t) ** 3;
-}
-
-export function easeInQuad(t) {
-  return t * t;
-}
-
 export function fingerKey(hand, finger) {
   return `${hand}-${finger}`;
+}
+
+/** Primary mapped glyph, a plant cousin, or occasional ✨. */
+export function pickDropEmoji(spec) {
+  if (Math.random() < 0.12) return "✨";
+  if (Math.random() < 0.55) return spec?.emoji || pick(PLANT_POOL);
+  if (spec?.extras?.length) return pick(spec.extras);
+  return pick(PLANT_POOL);
 }

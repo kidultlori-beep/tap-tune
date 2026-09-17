@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta
@@ -12,15 +12,15 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta
       name="description"
-      content="Finger Garden / 手势花园 — pinch to sow flowers over a live camera garden."
+      content="Finger Garden — pinch to drop plant emojis that fall and stack."
     />
-    <title>Finger Garden · 手势花园</title>
+    <title>Finger Garden</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext y='52' font-size='52'%3E🌸%3C/text%3E%3C/svg%3E" />
     <link rel="preconnect" href="https://cdn.jsdelivr.net" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500&family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;500;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500&family=Nunito:wght@400;600;700&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="css/styles.css" />
@@ -38,51 +38,51 @@
       src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.js"
       crossorigin="anonymous"
     ></script>
-
-    <script type="importmap">
-      {
-        "imports": {
-          "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"
-        }
-      }
-    </script>
   </head>
   <body>
     <div id="app">
       <div id="stage">
-        <video id="camera" autoplay muted playsinline webkit-playsinline></video>
-        <canvas id="garden-canvas" aria-hidden="true"></canvas>
-        <div id="fx-root"></div>
+        <video id="camera" class="is-front" autoplay muted playsinline webkit-playsinline></video>
+        <div id="pile-layer"></div>
         <div id="emoji-layer"></div>
         <div id="notes-layer"></div>
         <div id="critters-layer"></div>
       </div>
 
       <header id="hud" hidden>
-        <div class="pill" aria-live="polite">绽放 <strong id="bloom-count">0</strong></div>
-        <button id="btn-mute" class="icon-btn" type="button" aria-label="静音">🔊</button>
+        <div class="pill" aria-live="polite">Bloom <strong id="bloom-count">0</strong></div>
+        <div class="hud-actions">
+          <button id="btn-flip" class="icon-btn" type="button" aria-label="Flip camera">🔄</button>
+          <button id="btn-mute" class="icon-btn" type="button" aria-label="Mute">🔊</button>
+        </div>
       </header>
 
       <div id="toast" role="status"></div>
       <div id="demo-dock" hidden></div>
+      <a
+        id="x-link"
+        href="https://x.com/annieway2026"
+        target="_blank"
+        rel="noopener noreferrer"
+        >@annieway2026</a
+      >
 
       <section id="start-screen">
         <div class="petal-drift" aria-hidden="true">
-          <span>🌸</span><span>🌼</span><span>🌺</span><span>🍃</span><span>🌷</span>
+          <span>🌸</span><span>🌼</span><span>🌱</span><span>🍃</span><span>🍄</span>
         </div>
         <div class="start-card" id="start-card">
           <h1 class="brand-en">Finger Garden</h1>
-          <p class="brand-zh">手势花园</p>
-          <p class="lede">捏合拇指与手指播种</p>
+          <p class="lede">Pinch thumb and finger to plant</p>
           <p class="sub">
-            八根手指，八种花与音符。对准镜头轻轻一捏，种子落下，花开风起。
-            摄像头仅在本地使用，需要 HTTPS 或 localhost。
+            Eight fingers, eight notes. Emojis fall from your pinch and stack on the floor.
+            Camera stays on-device. Needs HTTPS or localhost.
           </p>
           <p id="fallback-copy" hidden></p>
           <div class="actions" id="start-actions">
-            <button id="btn-start" class="primary" type="button">进入花园</button>
-            <button id="btn-demo" class="ghost" type="button">演示模式</button>
-            <button id="btn-retry" class="retry" type="button" hidden>重试摄像头</button>
+            <button id="btn-start" class="primary" type="button">Enter garden</button>
+            <button id="btn-demo" class="ghost" type="button">Demo mode</button>
+            <button id="btn-retry" class="retry" type="button" hidden>Retry camera</button>
           </div>
           <p id="start-status"></p>
         </div>

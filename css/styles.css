@@ -1,8 +1,5 @@
 :root {
   --soil: #1c2a1c;
-  --moss: #3f6b45;
-  --leaf: #7fb56f;
-  --petal: #f4b8c8;
   --cream: #fff7ea;
   --ink: #243026;
   --glass: rgba(255, 247, 234, 0.72);
@@ -32,7 +29,7 @@ body {
   touch-action: none;
   background: var(--soil);
   color: var(--ink);
-  font-family: "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", sans-serif;
+  font-family: Nunito, "Segoe UI", system-ui, sans-serif;
 }
 
 #app {
@@ -54,10 +51,8 @@ body {
   content: "";
   position: absolute;
   inset: auto 0 0 0;
-  height: 42%;
-  background:
-    radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.2), transparent 50%),
-    linear-gradient(180deg, transparent, rgba(63, 107, 69, 0.35));
+  height: 28%;
+  background: linear-gradient(180deg, transparent, rgba(63, 107, 69, 0.22));
   pointer-events: none;
 }
 
@@ -68,8 +63,15 @@ body {
   height: 100%;
   object-fit: contain;
   object-position: center;
-  transform: scaleX(-1);
   background: transparent;
+}
+
+#camera.is-front {
+  transform: scaleX(-1);
+}
+
+#camera.is-back {
+  transform: none;
 }
 
 #camera.is-off {
@@ -77,9 +79,7 @@ body {
   pointer-events: none;
 }
 
-#garden-canvas,
-.fx-canvas,
-#fx-root,
+#pile-layer,
 #emoji-layer,
 #notes-layer,
 #critters-layer {
@@ -90,11 +90,7 @@ body {
   pointer-events: none;
 }
 
-#fx-root {
-  z-index: 3;
-}
-
-#garden-canvas {
+#pile-layer {
   z-index: 2;
 }
 
@@ -107,13 +103,24 @@ body {
   z-index: 5;
 }
 
+.drop-emoji {
+  position: absolute;
+  left: 0;
+  top: 0;
+  line-height: 1;
+  user-select: none;
+  pointer-events: none;
+  will-change: transform;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.18));
+}
+
 .fingertip {
   position: absolute;
   left: 0;
   top: 0;
-  font-size: 28px;
+  font-size: 26px;
   line-height: 1;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.22));
   transition: opacity 0.18s ease;
   will-change: transform;
   pointer-events: none;
@@ -121,28 +128,27 @@ body {
 }
 
 .fingertip.is-pinch {
-  filter: drop-shadow(0 0 10px rgba(255, 230, 160, 0.9));
+  filter: drop-shadow(0 0 8px rgba(255, 230, 160, 0.7));
 }
 
-.float-note {
+.float-sparkle {
   position: absolute;
   transform: translate(-50%, 0);
-  animation: noteUp linear forwards;
+  animation: sparkleUp linear forwards;
   pointer-events: none;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
-@keyframes noteUp {
+@keyframes sparkleUp {
   0% {
     opacity: 0;
-    transform: translate(-50%, 0) scale(0.7);
+    transform: translate(-50%, 0) scale(0.6);
   }
-  12% {
+  20% {
     opacity: 1;
   }
   100% {
     opacity: 0;
-    transform: translate(-50%, -140px) scale(1.15);
+    transform: translate(-50%, -72px) scale(1);
   }
 }
 
@@ -180,6 +186,12 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.hud-actions {
+  display: flex;
   gap: 8px;
   pointer-events: none;
 }
@@ -260,10 +272,34 @@ body {
   font-size: 22px;
   cursor: pointer;
   flex: 0 0 auto;
+  line-height: 1;
 }
 
 .seed-btn:active {
   transform: scale(0.94);
+}
+
+#x-link {
+  position: absolute;
+  right: calc(12px + var(--safe-r));
+  bottom: calc(12px + var(--safe-b));
+  z-index: 9;
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--glass);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  touch-action: manipulation;
+  pointer-events: auto;
+}
+
+#app.is-demo #x-link,
+#demo-dock:not([hidden]) ~ #x-link {
+  bottom: calc(78px + var(--safe-b));
 }
 
 #start-screen {
@@ -314,21 +350,14 @@ body {
   font-size: 42px;
   font-weight: 500;
   letter-spacing: 0.04em;
-  margin: 0;
+  margin: 0 0 10px;
   color: #2c3d2e;
-}
-
-.brand-zh {
-  font-family: "Ma Shan Zheng", "Noto Serif SC", serif;
-  font-size: 28px;
-  margin: 2px 0 14px;
-  color: #4d6a4e;
 }
 
 .lede {
   margin: 0 0 8px;
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .sub {
@@ -450,6 +479,5 @@ button.retry {
 
 @media (max-width: 420px) {
   .brand-en { font-size: 34px; }
-  .brand-zh { font-size: 24px; }
-  .fingertip { font-size: 24px; }
+  .fingertip { font-size: 22px; }
 }

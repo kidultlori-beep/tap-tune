@@ -40,9 +40,9 @@ export class HandsTracker {
       selfieMode: false,
     });
     this.hands.onResults((results) => this._onResults(results));
-    this.onStatus?.("正在加载手势模型…");
+    this.onStatus?.("Loading hand model…");
     await this.hands.initialize();
-    this.onStatus?.("手势模型已就绪");
+    this.onStatus?.("Hand model ready");
   }
 
   start() {

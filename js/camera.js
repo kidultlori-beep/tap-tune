@@ -1,4 +1,4 @@
-/** Front-facing camera with contain-fit mapping helpers. */
+/** Front/back camera with contain-fit mapping helpers. */
 
 import { clamp } from "./config.js";
 
@@ -13,6 +13,15 @@ export function isFastQuery() {
   } catch {
     return false;
   }
+}
+
+/** True when a facingMode switch is meaningful (phone/tablet). Desktop is a silent no-op. */
+export function canSwitchCamera() {
+  const ua = navigator.userAgent || "";
+  if (/Mobi|Android|iPhone|iPod/i.test(ua)) return true;
+  if (/iPad/i.test(ua)) return true;
+  if (navigator.maxTouchPoints > 1 && /Mac/i.test(ua)) return true;
+  return false;
 }
 
 export function getContainedRect(videoW, videoH, viewW, viewH) {
@@ -30,7 +39,7 @@ export function getContainedRect(videoW, videoH, viewW, viewH) {
   };
 }
 
-/** Map a MediaPipe landmark (0–1 in video space) onto the letterboxed, mirrored viewport. */
+/** Map a MediaPipe landmark (0–1 in video space) onto the letterboxed viewport. */
 export function landmarkToScreen(lm, rect, mirrored = true) {
   const nx = mirrored ? 1 - lm.x : lm.x;
   return {
@@ -43,27 +52,39 @@ export class CameraFeed {
   constructor(videoEl) {
     this.video = videoEl;
     this.stream = null;
+    this.facing = "user";
   }
 
-  async start() {
+  get mirrored() {
+    return this.facing !== "environment";
+  }
+
+  applyMirror() {
+    this.video.classList.toggle("is-front", this.mirrored);
+    this.video.classList.toggle("is-back", !this.mirrored);
+  }
+
+  async start(facing = "user") {
     if (!navigator.mediaDevices?.getUserMedia) {
       const err = new Error("no-media-devices");
       err.code = "unsupported";
       throw err;
     }
 
+    this.facing = facing === "environment" ? "environment" : "user";
+
     const attempts = [
       {
         audio: false,
         video: {
-          facingMode: { ideal: "user" },
+          facingMode: { ideal: this.facing },
           width: { ideal: 1280 },
           height: { ideal: 720 },
         },
       },
       {
         audio: false,
-        video: { facingMode: "user" },
+        video: { facingMode: this.facing },
       },
       {
         audio: false,
@@ -92,10 +113,35 @@ export class CameraFeed {
     this.video.playsInline = true;
     this.video.setAttribute("playsinline", "");
     this.video.setAttribute("webkit-playsinline", "true");
+    this.applyMirror();
 
     await this.video.play();
     await waitForVideo(this.video);
     return this.stream;
+  }
+
+  /**
+   * Switch user ↔ environment. Desktop / unsupported devices return quietly.
+   * Never throws; never alerts.
+   */
+  async flip() {
+    if (!canSwitchCamera() || !this.stream) {
+      return { flipped: false };
+    }
+    const next = this.facing === "user" ? "environment" : "user";
+    const prev = this.facing;
+    this.stop();
+    try {
+      await this.start(next);
+      return { flipped: true, facing: this.facing };
+    } catch {
+      try {
+        await this.start(prev);
+      } catch {
+        /* leave stopped; caller keeps demo fallback if needed */
+      }
+      return { flipped: false };
+    }
   }
 
   stop() {

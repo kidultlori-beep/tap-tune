@@ -1,8 +1,7 @@
-/** DOM overlays: fingertip plants, floating notes, milestone fly-by. */
+/** DOM overlays: fingertip glyphs, tiny ✨, milestone fly-by. */
 
-import { FINGER_MAP, NON_THUMB_FINGERS, fingerKey, pick, rand } from "./config.js";
+import { FINGER_MAP, NON_THUMB_FINGERS, fingerKey, rand } from "./config.js";
 
-const NOTE_EMOJIS = ["🎵", "🎶", "♩", "♪", "♫"];
 const BUTTERFLIES = ["🦋", "🦋", "🦋", "🦋", "🦋"];
 const BIRD = "🐦";
 
@@ -14,7 +13,6 @@ export class Overlays {
     /** @type {Map<string, HTMLElement>} */
     this.tips = new Map();
     this._nodes = [];
-    this._critters = [];
   }
 
   syncFingertips(hands) {
@@ -36,35 +34,32 @@ export class Overlays {
         }
         const pinching = hand.pinching?.[finger];
         el.classList.toggle("is-pinch", !!pinching);
-        el.style.transform = `translate(${tip.x}px, ${tip.y}px) translate(-50%, -50%) scale(${pinching ? 1.25 : 1})`;
+        el.style.transform = `translate(${tip.x}px, ${tip.y}px) translate(-50%, -50%) scale(${pinching ? 1.2 : 1})`;
         el.style.opacity = "1";
       }
     }
     for (const [key, el] of this.tips) {
       if (!seen.has(key)) {
         el.style.opacity = "0";
-        el.style.transform += " scale(0.6)";
       }
     }
   }
 
-  spawnNotes(x, y, count = 1) {
-    const n = Math.max(1, count);
-    for (let i = 0; i < n; i++) {
-      const el = document.createElement("div");
-      el.className = "float-note";
-      el.textContent = pick(NOTE_EMOJIS);
-      const dx = rand(-36, 36);
-      const dur = rand(1.1, 1.8);
-      el.style.left = `${x + dx}px`;
-      el.style.top = `${y}px`;
-      el.style.animationDuration = `${dur}s`;
-      el.style.fontSize = `${rand(18, 28)}px`;
-      this.notesLayer.appendChild(el);
-      const rec = { el, born: performance.now(), life: dur * 1000 };
-      this._nodes.push(rec);
-      setTimeout(() => el.remove(), dur * 1000 + 40);
-    }
+  /** Tiny rising sparkle — not a particle system. */
+  spawnSparkle(x, y) {
+    if (Math.random() > 0.55) return;
+    const el = document.createElement("div");
+    el.className = "float-sparkle";
+    el.textContent = "✨";
+    el.style.left = `${x + rand(-10, 10)}px`;
+    el.style.top = `${y}px`;
+    const dur = rand(0.7, 1.15);
+    el.style.animationDuration = `${dur}s`;
+    el.style.fontSize = `${rand(12, 18)}px`;
+    this.notesLayer.appendChild(el);
+    const rec = { el, born: performance.now(), life: dur * 1000 };
+    this._nodes.push(rec);
+    setTimeout(() => el.remove(), dur * 1000 + 40);
   }
 
   milestoneFlyby() {
