@@ -444,6 +444,18 @@ button.retry {
   color: #4a3038;
 }
 
+.lab-entry-wrap {
+  margin: 14px 0 0;
+}
+
+.lab-entry {
+  color: #4b5d4e;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 #start-status {
   min-height: 1.2em;
   margin: 12px 0 0;

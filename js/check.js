@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import { FINGER_MAP, FINGER_TYPES, PLANT_POOL, pickDropEmoji, BEAUTY_STORAGE_KEY } from "./config.js";
 import { PinchDetector } from "./pinch.js";
 import { readBeautyPref } from "./beauty.js";
+import { PRESETS } from "./beauty-lab.js";
 
 let failed = 0;
 function assert(cond, msg) {
@@ -107,6 +108,19 @@ assert(readBeautyPref() === true, "beauty defaults on without stored pref");
 const beautySrc = readFileSync(join(root, "js/beauty.js"), "utf8");
 assert(/softLight/.test(beautySrc) && /u_smooth/.test(beautySrc), "beauty shader has smooth + soft-light");
 assert(/setEnabled/.test(beautySrc), "beauty can be toggled off");
+
+const labHtml = readFileSync(join(root, "beauty-lab.html"), "utf8");
+assert(!/Demo mode|Demo sow|btn-demo/i.test(labHtml), "lab has no demo UI");
+assert(/Beauty lab/.test(labHtml), "lab page titled Beauty lab");
+const names = PRESETS.map((p) => p.name);
+assert(names.includes("Raw / Off"), "raw preset");
+assert(names.includes("Soft Natural"), "Soft Natural");
+assert(names.includes("Warm Glow"), "Warm Glow");
+assert(names.includes("Cool Clean"), "Cool Clean");
+assert(names.includes("Cream Soft"), "Cream Soft");
+assert(names.includes("Film Soft"), "Film Soft");
+assert(PRESETS.length === 6, "six lab looks including raw");
+assert(/lab-entry/.test(html) && /beauty-lab.html/.test(html), "landing links to Beauty lab");
 
 if (failed) {
   console.error(`\n${failed} check(s) failed`);
