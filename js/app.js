@@ -359,6 +359,9 @@ function bind() {
     share() {
       return shareGarden({ bloomCount: garden.bloomCount, toast });
     },
+    spawnCritter() {
+      return overlays.spawnCritter();
+    },
   };
 }
 

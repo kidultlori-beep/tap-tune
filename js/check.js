@@ -201,6 +201,7 @@ assert(/twitter:card/.test(html) && /summary_large_image/.test(html), "Twitter l
 assert(/og:url/.test(html) && /fingergarden\.annieway\.world/.test(html), "OG url is live domain");
 assert(!/[\u4e00-\u9fff]/.test(html), "index copy has no Chinese");
 assert(/share-btn/.test(css), "share button CSS");
+assert(/#btn-share\[hidden\]/.test(css), "hidden Share stays display none");
 assert(/right: calc\(10px \+ var\(--safe-r\)\)/.test(css), "share sits bottom-right with safe area");
 const og = readFileSync(join(root, "og.png"));
 assert(og[0] === 0x89 && og[1] === 0x50 && og[2] === 0x4e && og[3] === 0x47, "og.png is PNG");
