@@ -18,6 +18,7 @@ import {
   filterShort,
   filterLabel,
 } from "./beauty.js";
+import { shareGarden } from "./share.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -43,6 +44,7 @@ const ui = {
   beautyCanvas: $("beauty"),
   btnMute: $("btn-mute"),
   btnFlip: $("btn-flip"),
+  btnShare: $("btn-share"),
   toast: $("toast"),
 };
 
@@ -133,6 +135,7 @@ function setHudBloom() {
 function enterGardenChrome() {
   ui.start.classList.add("is-hidden");
   ui.hud.hidden = false;
+  ui.btnShare.hidden = false;
   ui.app.classList.add("in-garden");
   ui.video.classList.remove("is-off");
   layout();
@@ -284,6 +287,19 @@ function bind() {
     }
   });
 
+  ui.btnShare.addEventListener("click", async () => {
+    if (ui.btnShare.disabled) return;
+    ui.btnShare.disabled = true;
+    try {
+      await shareGarden({ bloomCount: garden.bloomCount, toast });
+    } catch (err) {
+      console.warn(err);
+      toast("Could not share — try again");
+    } finally {
+      ui.btnShare.disabled = false;
+    }
+  });
+
   ui.btnFilter.addEventListener("click", (e) => {
     e.stopPropagation();
     if (!looks?.available) return;
@@ -328,6 +344,9 @@ function bind() {
     },
     pitchFor(key) {
       return pitchForPinch(lastHands, key);
+    },
+    share() {
+      return shareGarden({ bloomCount: garden.bloomCount, toast });
     },
   };
 }

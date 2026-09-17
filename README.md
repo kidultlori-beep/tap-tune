@@ -9,13 +9,13 @@ Pure static site. No React/Vue, no bundler, no build step.
 
 ## HTTPS preview (phone)
 
-GitHub Pages is enabled on this repo:
+Live site (GitHub Pages + custom domain):
 
-**https://kidultlori-beep.github.io/tap-tune/**
+**https://fingergarden.annieway.world/**
 
-Pages currently publishes the PR branch `cursor/finger-garden-8e3d`. After this PR is merged to `main`, point Pages at `main` (or keep the branch) so the same URL stays current.
+Camera access requires HTTPS (or localhost). Use the live URL on a phone.
 
-Camera access requires HTTPS (or localhost). The Pages URL above is the phone preview.
+Also published at https://kidultlori-beep.github.io/tap-tune/ if Pages still serves the project URL.
 
 ## Run locally
 
@@ -33,6 +33,7 @@ Then open http://localhost:8080/
 - Tap **Enter garden**, allow the camera, pinch thumb to each fingertip.
 - Front camera is mirrored; **🔄** flips to the back camera on phones. On desktop the flip button is a silent no-op. Pitch always follows the **picture**: left edge of the video is A, right edge is B, on both cameras.
 - Camera look dropdown (next to Bloom): **Off / Raw**, **Soft Natural**, **LCD** (monochrome dot-matrix), **Film** (90s analog), **Dream** (hazy digicam). Default **LCD**. Preference is saved. If WebGL is missing, the raw camera is shown.
+- **Share** (bottom-right, clear of Bloom / filter / flip / mute / @annieway2026) builds a 1080×1080 garden card and prefers the Web Share sheet with the PNG (iPhone Safari). If files cannot be shared, it downloads the PNG, copies https://fingergarden.annieway.world/ , and toasts.
 - If permission is denied, allow the camera in browser settings and tap **Retry camera**. No native `alert()`.
 
 ## CDN libraries
@@ -100,4 +101,6 @@ js/pinch.js     Debounced pinch → sow
 js/garden.js    Gravity drop, pastel stem grow, fade
 js/audio.js     Web Audio tones + mute
 js/overlays.js  Fingertip glyphs, ✨, critters
+js/share.js     Share card canvas + Web Share / download fallback
+og.png          Open Graph / Twitter unfurl image (1200×630)
 ```

@@ -10,6 +10,7 @@ import { PinchDetector } from "./pinch.js";
 import { landmarkToScreen } from "./camera.js";
 import { readFilterPref, FILTER_IDS } from "./beauty.js";
 import { PRESETS } from "./beauty-lab.js";
+import { SHARE_URL, SHARE_TITLE, SHARE_LINE, CARD_W, CARD_H, OG_W, OG_H, shareText, CARD_FILE } from "./share.js";
 
 let failed = 0;
 function assert(cond, msg) {
@@ -169,6 +170,28 @@ assert(/bayer4/.test(beautySrc) && /LCD_FRAG/.test(beautySrc), "LCD Bayer dot-ma
 assert(/FILM_FRAG/.test(beautySrc) && /filmCurve/.test(beautySrc), "Film analog grade shader");
 assert(/DREAM_FRAG/.test(beautySrc) && /vec2 ca/.test(beautySrc), "Dream bloom + chromatic aberration");
 assert(/setMode/.test(beautySrc), "looks can switch including raw");
+
+assert(SHARE_TITLE === "Finger Garden", "share title");
+assert(SHARE_LINE === "I planted a garden with my fingers", "share line");
+assert(SHARE_URL === "https://fingergarden.annieway.world/", "share url");
+assert(CARD_W === 1080 && CARD_H === 1080, "square 1080 share card");
+assert(OG_W === 1200 && OG_H === 630, "og image size");
+assert(CARD_FILE === "finger-garden.png", "share filename");
+assert(shareText(0).includes(SHARE_URL) && shareText(0).includes(SHARE_LINE), "share text has line + url");
+assert(shareText(12).includes("Bloom 12"), "share text includes bloom when set");
+assert(/id="btn-share"/.test(html) && /Share garden card/.test(html), "in-garden Share control");
+assert(/navigator\.share/.test(readFileSync(join(root, "js/share.js"), "utf8")), "uses Web Share API");
+assert(/canShare/.test(readFileSync(join(root, "js/share.js"), "utf8")), "prefers share with files");
+assert(!/MediaRecorder|getDisplayMedia|timeslice/.test(app), "no song recording in this pass");
+assert(/og:image/.test(html) && /fingergarden\.annieway\.world\/og\.png/.test(html), "OG image absolute URL");
+assert(/twitter:card/.test(html) && /summary_large_image/.test(html), "Twitter large image card");
+assert(/og:url/.test(html) && /fingergarden\.annieway\.world/.test(html), "OG url is live domain");
+assert(!/[\u4e00-\u9fff]/.test(html), "index copy has no Chinese");
+assert(/share-btn/.test(css), "share button CSS");
+assert(/right: calc\(10px \+ var\(--safe-r\)\)/.test(css), "share sits bottom-right with safe area");
+const og = readFileSync(join(root, "og.png"));
+assert(og[0] === 0x89 && og[1] === 0x50 && og[2] === 0x4e && og[3] === 0x47, "og.png is PNG");
+assert(og.length > 8_000, "og.png has image payload");
 
 const labHtml = readFileSync(join(root, "beauty-lab.html"), "utf8");
 assert(!/Demo mode|Demo sow|btn-demo/i.test(labHtml), "lab has no demo UI");

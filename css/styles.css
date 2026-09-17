@@ -517,6 +517,33 @@ button.retry {
   font-size: 12px;
 }
 
+/* Bottom-right, opposite @annieway2026. Stays off Bloom / filter / flip / mute. */
+.share-btn {
+  position: absolute;
+  right: calc(10px + var(--safe-r));
+  bottom: calc(12px + var(--safe-b));
+  left: auto;
+  z-index: 13;
+  appearance: none;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 14px;
+  min-height: 44px;
+  cursor: pointer;
+  gap: 6px;
+  color: var(--ink);
+}
+
+.share-btn:disabled {
+  opacity: 0.65;
+}
+
+.share-icon {
+  display: block;
+  flex: 0 0 auto;
+}
+
 #toast {
   position: absolute;
   left: 50%;
@@ -529,7 +556,7 @@ button.retry {
   font-size: 13px;
   opacity: 0;
   pointer-events: none;
-  z-index: 9;
+  z-index: 14;
   transition: opacity 0.25s ease, transform 0.25s ease;
   white-space: nowrap;
   max-width: calc(100% - 32px);
