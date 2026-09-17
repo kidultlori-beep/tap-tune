@@ -3,7 +3,7 @@
 Product display name: **Finger Garden**.  
 Repository / code name stays **tap-tune**.
 
-Pinch a thumb to a fingertip. A plant emoji falls, grows a thin pastel stem of random height, then fades with ✨ after a few seconds. Each of the eight non-thumb fingers plays its own pitch.
+Pinch a thumb to a fingertip. A plant emoji falls, grows a thin pastel stem of random height, then fades with ✨ after a few seconds. The eight non-thumb fingers play a rising C major scale (Do Re Mi Fa · Sol La Ti Do).
 
 Pure static site. No React/Vue, no bundler, no build step.
 
@@ -47,18 +47,23 @@ Hand tracking uses script-tag + globals. There is **no** Three.js particle layer
 
 ## Finger → emoji → pitch
 
-Thumbs have no plant overlay; they are only used for pinch.
+Thumbs have no plant overlay; they are only used for pinch. Notes are a continuous C major scale, A4 = 440 Hz equal temperament.
 
-| Finger type | Emoji (fingertip) | Note | Hz |
-| --- | --- | --- | --- |
-| Left index | 🌸 | C5 | 523.25 |
-| Left middle | 🌼 | D5 | 587.33 |
-| Left ring | 🌺 | E5 | 659.25 |
-| Left pinky | 🌷 | G5 | 783.99 |
-| Right index | 🌻 | A5 | 880.00 |
-| Right middle | 🌹 | C6 | 1046.50 |
-| Right ring | 🪻 | D6 | 1174.66 |
-| Right pinky | 🍀 | E6 | 1318.51 |
+| Hand | Index | Middle | Ring | Pinky |
+| --- | --- | --- | --- | --- |
+| Left | C5 Do 🌸 523.25 | D5 Re 🌼 587.33 | E5 Mi 🌺 659.25 | F5 Fa 🌷 698.46 |
+| Right | G5 Sol 🌻 783.99 | A5 La 🌹 880.00 | B5 Ti 🪻 987.77 | C6 Do 🍀 1046.50 |
+
+| Finger type | Emoji (fingertip) | Solfege | Note | Hz |
+| --- | --- | --- | --- | --- |
+| Left index | 🌸 | Do | C5 | 523.25 |
+| Left middle | 🌼 | Re | D5 | 587.33 |
+| Left ring | 🌺 | Mi | E5 | 659.25 |
+| Left pinky | 🌷 | Fa | F5 | 698.46 |
+| Right index | 🌻 | Sol | G5 | 783.99 |
+| Right middle | 🌹 | La | A5 | 880.00 |
+| Right ring | 🪻 | Ti | B5 | 987.77 |
+| Right pinky | 🍀 | Do | C6 | 1046.50 |
 
 Sowable pool (mixed, not flowers-only): 🌺🌸🌼🌻🌹🪻🌷🍄‍🟫🍄🍁🍂🍀☘️🌿🎄🌟🫧
 

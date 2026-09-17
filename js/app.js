@@ -4,7 +4,7 @@
  * Camera garden only — query flags such as ?demo=1 are ignored.
  */
 
-import { FINGER_MAP, MILESTONE_EVERY } from "./config.js";
+import { FINGER_MAP, MILESTONE_EVERY, FINGER_TYPES } from "./config.js";
 import { GardenAudio } from "./audio.js";
 import { CameraFeed, canSwitchCamera } from "./camera.js";
 import { PinchDetector } from "./pinch.js";
@@ -322,6 +322,14 @@ function bind() {
     },
     get filter() {
       return looks?.mode || "raw";
+    },
+    get scale() {
+      return FINGER_TYPES.map((k) => ({
+        key: k,
+        note: FINGER_MAP[k].note,
+        freq: FINGER_MAP[k].freq,
+        solfege: FINGER_MAP[k].solfege,
+      }));
     },
   };
 }

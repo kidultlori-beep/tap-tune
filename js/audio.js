@@ -1,4 +1,4 @@
-/** Web Audio garden tones — one pleasant pitch per finger type. */
+/** Web Audio garden tones — one C major pitch per non-thumb finger. */
 
 export class GardenAudio {
   constructor() {

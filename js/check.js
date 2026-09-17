@@ -50,11 +50,20 @@ assert(freqs.size === 8, "unique pitches");
 assert(FINGER_MAP["Left-index"].freq === 523.25, "Left index C5");
 assert(FINGER_MAP["Left-middle"].freq === 587.33, "Left middle D5");
 assert(FINGER_MAP["Left-ring"].freq === 659.25, "Left ring E5");
-assert(FINGER_MAP["Left-pinky"].freq === 783.99, "Left pinky G5");
-assert(FINGER_MAP["Right-index"].freq === 880.0, "Right index A5");
-assert(FINGER_MAP["Right-middle"].freq === 1046.5, "Right middle C6");
-assert(FINGER_MAP["Right-ring"].freq === 1174.66, "Right ring D6");
-assert(FINGER_MAP["Right-pinky"].freq === 1318.51, "Right pinky E6");
+assert(FINGER_MAP["Left-pinky"].freq === 698.46, "Left pinky F5");
+assert(FINGER_MAP["Right-index"].freq === 783.99, "Right index G5");
+assert(FINGER_MAP["Right-middle"].freq === 880.0, "Right middle A5");
+assert(FINGER_MAP["Right-ring"].freq === 987.77, "Right ring B5");
+assert(FINGER_MAP["Right-pinky"].freq === 1046.5, "Right pinky C6");
+const scaleNotes = FINGER_TYPES.map((k) => FINGER_MAP[k].note);
+assert(scaleNotes.join(" ") === "C5 D5 E5 F5 G5 A5 B5 C6", "C major scale notes");
+const scaleHz = FINGER_TYPES.map((k) => FINGER_MAP[k].freq);
+assert(
+  scaleHz.every((hz, i) => i === 0 || hz > scaleHz[i - 1]),
+  "scale rises across both hands"
+);
+const solfege = FINGER_TYPES.map((k) => FINGER_MAP[k].solfege);
+assert(solfege.join(" ") === "Do Re Mi Fa Sol La Ti Do", "Do Re Mi Fa Sol La Ti Do");
 
 for (const g of REQUIRED) {
   assert(PLANT_POOL.includes(g), `pool includes ${g}`);
@@ -102,6 +111,8 @@ assert(!/demo-dock|btn-demo|Demo mode|Demo sow/i.test(html), "HTML has no demo U
 assert(!/#demo-dock|has-demo-dock|demo-stage/.test(css), "CSS has no demo chrome");
 assert(!/btn-demo|DemoHands|startDemo|isDemoQuery/.test(app), "app.js has no demo entry");
 assert(!/demo\.js/.test(html), "demo.js is not loaded");
+assert(/Do Re Mi Fa/.test(html) && /Sol La Ti Do/.test(html), "landing C major scale hint");
+assert(!/eight notes/i.test(html), "old eight-notes copy gone");
 assert(/btn-filter/.test(html) && /id="beauty"/.test(html), "filter dropdown + canvas exist");
 assert(/data-filter="lcd"/.test(html) && /data-filter="raw"/.test(html), "Raw and LCD options");
 assert(/data-filter="natural"/.test(html), "Soft Natural option");

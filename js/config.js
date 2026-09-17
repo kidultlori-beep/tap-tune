@@ -58,6 +58,7 @@ export const STEM_COLORS = [
 /**
  * Fixed mapping. MediaPipe handedness is the person's physical hand.
  * After selfie mirroring, the person's right hand appears on the right.
+ * Eight non-thumb fingers = one rising C major scale (Do Re Mi Fa Sol La Ti Do).
  */
 export const FINGER_MAP = {
   "Left-index": {
@@ -67,6 +68,7 @@ export const FINGER_MAP = {
     label: "Left index",
     emoji: "🌸",
     note: "C5",
+    solfege: "Do",
     freq: 523.25,
   },
   "Left-middle": {
@@ -76,6 +78,7 @@ export const FINGER_MAP = {
     label: "Left middle",
     emoji: "🌼",
     note: "D5",
+    solfege: "Re",
     freq: 587.33,
   },
   "Left-ring": {
@@ -85,6 +88,7 @@ export const FINGER_MAP = {
     label: "Left ring",
     emoji: "🌺",
     note: "E5",
+    solfege: "Mi",
     freq: 659.25,
   },
   "Left-pinky": {
@@ -93,8 +97,9 @@ export const FINGER_MAP = {
     finger: "pinky",
     label: "Left pinky",
     emoji: "🌷",
-    note: "G5",
-    freq: 783.99,
+    note: "F5",
+    solfege: "Fa",
+    freq: 698.46,
   },
   "Right-index": {
     key: "Right-index",
@@ -102,8 +107,9 @@ export const FINGER_MAP = {
     finger: "index",
     label: "Right index",
     emoji: "🌻",
-    note: "A5",
-    freq: 880.0,
+    note: "G5",
+    solfege: "Sol",
+    freq: 783.99,
   },
   "Right-middle": {
     key: "Right-middle",
@@ -111,8 +117,9 @@ export const FINGER_MAP = {
     finger: "middle",
     label: "Right middle",
     emoji: "🌹",
-    note: "C6",
-    freq: 1046.5,
+    note: "A5",
+    solfege: "La",
+    freq: 880.0,
   },
   "Right-ring": {
     key: "Right-ring",
@@ -120,8 +127,9 @@ export const FINGER_MAP = {
     finger: "ring",
     label: "Right ring",
     emoji: "🪻",
-    note: "D6",
-    freq: 1174.66,
+    note: "B5",
+    solfege: "Ti",
+    freq: 987.77,
   },
   "Right-pinky": {
     key: "Right-pinky",
@@ -129,8 +137,9 @@ export const FINGER_MAP = {
     finger: "pinky",
     label: "Right pinky",
     emoji: "🍀",
-    note: "E6",
-    freq: 1318.51,
+    note: "C6",
+    solfege: "Do",
+    freq: 1046.5,
   },
 };
 
