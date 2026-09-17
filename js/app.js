@@ -18,6 +18,7 @@ import {
   filterShort,
   filterLabel,
 } from "./beauty.js";
+import { shareGarden } from "./share.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -43,6 +44,7 @@ const ui = {
   beautyCanvas: $("beauty"),
   btnMute: $("btn-mute"),
   btnFlip: $("btn-flip"),
+  btnShare: $("btn-share"),
   toast: $("toast"),
 };
 
@@ -63,6 +65,7 @@ let lastHands = [];
 let lastT = performance.now();
 let lastMilestone = 0;
 let running = false;
+let nextCritterAt = 0;
 
 function toast(msg) {
   ui.toast.textContent = msg;
@@ -133,6 +136,7 @@ function setHudBloom() {
 function enterGardenChrome() {
   ui.start.classList.add("is-hidden");
   ui.hud.hidden = false;
+  ui.btnShare.hidden = false;
   ui.app.classList.add("in-garden");
   ui.video.classList.remove("is-off");
   layout();
@@ -141,8 +145,9 @@ function enterGardenChrome() {
 function sowFromPinch(event) {
   if (!FINGER_MAP[event.key]) return;
   const plant = garden.sow(event.key, event.x, event.y);
-  const pitch = pitchForPinch(lastHands, event.key);
+  const pitch = pitchForPinch(event.key, { mirrored: camera?.mirrored ?? true });
   audio.playFinger(pitch.freq);
+  overlays.flashNote(event.x, event.y, pitch.letter);
   return plant;
 }
 
@@ -185,6 +190,11 @@ function frame(now) {
   }));
   overlays.syncFingertips(overlayHands);
   overlays.prune();
+
+  if (now >= nextCritterAt) {
+    overlays.spawnCritter();
+    nextCritterAt = now + 7000 + Math.random() * 9000;
+  }
 
   const events = garden.update(dt);
   handleGardenEvents(events);
@@ -250,6 +260,7 @@ function beginLoop() {
   if (running) return;
   running = true;
   lastT = performance.now();
+  nextCritterAt = lastT + 2800;
   requestAnimationFrame(frame);
 }
 
@@ -281,6 +292,19 @@ function bind() {
     if (result.flipped) {
       syncTrackerMirror();
       looks?.syncMirror(camera.mirrored);
+    }
+  });
+
+  ui.btnShare.addEventListener("click", async () => {
+    if (ui.btnShare.disabled) return;
+    ui.btnShare.disabled = true;
+    try {
+      await shareGarden({ bloomCount: garden.bloomCount, toast });
+    } catch (err) {
+      console.warn(err);
+      toast("Could not share — try again");
+    } finally {
+      ui.btnShare.disabled = false;
     }
   });
 
@@ -326,8 +350,17 @@ function bind() {
     get scale() {
       return SCREEN_SCALE;
     },
+    get mirrored() {
+      return camera?.mirrored ?? true;
+    },
     pitchFor(key) {
-      return pitchForPinch(lastHands, key);
+      return pitchForPinch(key, { mirrored: camera?.mirrored ?? true });
+    },
+    share() {
+      return shareGarden({ bloomCount: garden.bloomCount, toast });
+    },
+    spawnCritter() {
+      return overlays.spawnCritter();
     },
   };
 }

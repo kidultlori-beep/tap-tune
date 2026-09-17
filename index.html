@@ -12,8 +12,28 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta
       name="description"
-      content="Finger Garden — pinch your fingers to plant a living emoji garden over the camera."
+      content="Finger Garden — pinch thumb and fingertip to plant a living emoji garden over the camera. Left to right on screen: A C D E F G A B."
     />
+    <link rel="canonical" href="https://fingergarden.annieway.world/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Finger Garden" />
+    <meta property="og:title" content="Finger Garden" />
+    <meta
+      property="og:description"
+      content="Pinch thumb and fingertip to plant a living emoji garden over your camera. Left to right on screen: A C D E F G A B."
+    />
+    <meta property="og:url" content="https://fingergarden.annieway.world/" />
+    <meta property="og:image" content="https://fingergarden.annieway.world/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Finger Garden — pinch to plant a garden with your fingers" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Finger Garden" />
+    <meta
+      name="twitter:description"
+      content="Pinch thumb and fingertip to plant a living emoji garden over your camera."
+    />
+    <meta name="twitter:image" content="https://fingergarden.annieway.world/og.png" />
     <title>Finger Garden</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ctext y='52' font-size='52'%3E🌸%3C/text%3E%3C/svg%3E" />
     <link rel="preconnect" href="https://cdn.jsdelivr.net" />
@@ -82,6 +102,15 @@
       </header>
 
       <div id="toast" role="status"></div>
+      <button id="btn-share" class="pill share-btn" type="button" hidden aria-label="Share garden card">
+        <svg class="share-icon" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+          <path
+            fill="currentColor"
+            d="M14 3h7v7h-2V6.41l-9.29 9.3-1.42-1.42 9.3-9.29H14V3zM5 5h6v2H7v10h10v-4h2v6H5V5z"
+          />
+        </svg>
+        Share
+      </button>
       <a
         id="x-link"
         href="https://x.com/annieway2026"
@@ -98,7 +127,8 @@
           <h1 class="brand-en">Finger Garden</h1>
           <p class="lede">Pinch thumb and fingertip to plant</p>
           <p class="sub">
-            Eight fingertips, left to right on screen: A C D E F G A B. A plant falls, grows a thin stem, then fades with sparkles.
+            Each fingertip keeps a fixed note. In a usual two-hand pose they read left to right on screen: A C D E F G A B.
+            Front camera: right pinky is A. Back camera: left pinky is A. A plant falls, grows a thin stem, then fades with sparkles.
             Camera stays on your device. Open this page over HTTPS on a phone.
           </p>
           <p id="fallback-copy" hidden></p>

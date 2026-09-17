@@ -57,7 +57,7 @@ export const STEM_COLORS = [
 
 /**
  * Plant overlays only. MediaPipe handedness is the person's physical hand.
- * Pitch is NOT stored here — see SCREEN_SCALE / pitchForPinch.
+ * Pitch is a fixed finger-identity map — see FRONT_FINGER_PITCH / BACK_FINGER_PITCH.
  */
 export const FINGER_MAP = {
   "Left-index": {
@@ -119,54 +119,64 @@ export const FINGER_MAP = {
 };
 
 /**
- * On-screen left → right among visible non-thumb tips.
- * Rank 0 is the left edge of the picture (after selfie mirroring).
- * A4 = 440 Hz equal temperament.
+ * Equal-temperament scale A4…B5. Index 0 is screen-left in a usual two-hand pose.
+ * A4 = 440 Hz.
  */
 export const SCREEN_SCALE = [
-  { note: "A4", freq: 440.0 },
-  { note: "C5", freq: 523.25 },
-  { note: "D5", freq: 587.33 },
-  { note: "E5", freq: 659.25 },
-  { note: "F5", freq: 698.46 },
-  { note: "G5", freq: 783.99 },
-  { note: "A5", freq: 880.0 },
-  { note: "B5", freq: 987.77 },
+  { note: "A4", freq: 440.0, letter: "A" },
+  { note: "C5", freq: 523.25, letter: "C" },
+  { note: "D5", freq: 587.33, letter: "D" },
+  { note: "E5", freq: 659.25, letter: "E" },
+  { note: "F5", freq: 698.46, letter: "F" },
+  { note: "G5", freq: 783.99, letter: "G" },
+  { note: "A5", freq: 880.0, letter: "A" },
+  { note: "B5", freq: 987.77, letter: "B" },
 ];
 
-export function listVisibleNonThumbTips(hands) {
-  const tips = [];
-  if (!hands) return tips;
-  for (const hand of hands) {
-    for (const finger of NON_THUMB_FINGERS) {
-      const tip = hand.tips?.[finger];
-      if (!tip || !Number.isFinite(tip.x)) continue;
-      tips.push({
-        key: fingerKey(hand.hand, finger),
-        x: tip.x,
-        y: Number.isFinite(tip.y) ? tip.y : 0,
-      });
-    }
-  }
-  return tips;
+/**
+ * Front camera (mirrored selfie). User's right hand is on the left of the picture.
+ * Usual pose left → right on screen: A C D E F G A B.
+ */
+export const FRONT_FINGER_PITCH = {
+  "Right-pinky": 0,
+  "Right-ring": 1,
+  "Right-middle": 2,
+  "Right-index": 3,
+  "Left-index": 4,
+  "Left-middle": 5,
+  "Left-ring": 6,
+  "Left-pinky": 7,
+};
+
+/**
+ * Back camera (not mirrored). User's left hand is on the left of the picture.
+ */
+export const BACK_FINGER_PITCH = {
+  "Left-pinky": 0,
+  "Left-ring": 1,
+  "Left-middle": 2,
+  "Left-index": 3,
+  "Right-index": 4,
+  "Right-middle": 5,
+  "Right-ring": 6,
+  "Right-pinky": 7,
+};
+
+export function pitchTable(mirrored = true) {
+  return mirrored ? FRONT_FINGER_PITCH : BACK_FINGER_PITCH;
 }
 
-export function rankTipsLeftToRight(hands) {
-  return listVisibleNonThumbTips(hands).sort((a, b) => {
-    if (a.x !== b.x) return a.x - b.x;
-    if (a.y !== b.y) return a.y - b.y;
-    return a.key.localeCompare(b.key);
-  });
-}
-
-/** Pitch for a pinched non-thumb tip from its current screen-X rank. */
-export function pitchForPinch(hands, key) {
-  const ranked = rankTipsLeftToRight(hands);
-  let i = ranked.findIndex((t) => t.key === key);
-  if (i < 0) i = 0;
+/**
+ * Stable pitch for a physical fingertip. Same finger → same note for a given camera facing.
+ * `mirrored` is true for the front/selfie camera.
+ */
+export function pitchForPinch(key, { mirrored = true } = {}) {
+  const table = pitchTable(mirrored);
+  let i = table[key];
+  if (!Number.isInteger(i) || i < 0) i = 0;
   i = Math.min(i, SCREEN_SCALE.length - 1);
   const step = SCREEN_SCALE[i];
-  return { note: step.note, freq: step.freq, index: i };
+  return { note: step.note, freq: step.freq, index: i, letter: step.letter };
 }
 
 export const MILESTONE_EVERY = 20;

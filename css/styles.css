@@ -195,26 +195,88 @@ body {
 
 .critter {
   position: absolute;
-  left: -12vw;
   font-size: calc(28px * var(--scale, 1));
-  animation: flyby var(--dur, 4s) var(--delay, 0s) ease-in forwards;
+  animation-duration: var(--dur, 2s);
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
   filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2));
+  pointer-events: none;
+  will-change: transform, opacity;
 }
 
-@keyframes flyby {
+.critter-ltr,
+.critter-diag-ltr {
+  left: -12vw;
+  right: auto;
+  animation-name: critter-ltr;
+}
+
+.critter-rtl,
+.critter-diag-rtl {
+  left: auto;
+  right: -12vw;
+  animation-name: critter-rtl;
+}
+
+@keyframes critter-ltr {
   0% {
-    transform: translateX(0) translateY(0);
+    transform: translate(0, 0);
     opacity: 0;
   }
-  8% {
+  12% {
     opacity: 1;
   }
-  50% {
-    transform: translateX(55vw) translateY(calc(var(--wobble, 12px) * -1));
+  86% {
+    opacity: 1;
   }
   100% {
-    transform: translateX(118vw) translateY(var(--wobble, 12px));
+    transform: translate(124vw, var(--dy, 0px));
     opacity: 0;
+  }
+}
+
+@keyframes critter-rtl {
+  0% {
+    transform: translate(0, 0);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  86% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-124vw, var(--dy, 0px));
+    opacity: 0;
+  }
+}
+
+.note-flash {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: #fff7ea;
+  text-shadow: 0 1px 6px rgba(28, 42, 28, 0.45);
+  pointer-events: none;
+  animation: noteFlash 0.7s ease-out forwards;
+  z-index: 6;
+}
+
+@keyframes noteFlash {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -40%) scale(0.75);
+  }
+  18% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -110%) scale(1);
   }
 }
 
@@ -229,6 +291,11 @@ body {
   justify-content: space-between;
   gap: 8px;
   pointer-events: none;
+}
+
+#hud[hidden],
+#btn-share[hidden] {
+  display: none !important;
 }
 
 .hud-left,
@@ -517,6 +584,33 @@ button.retry {
   font-size: 12px;
 }
 
+/* Bottom-right, opposite @annieway2026. Stays off Bloom / filter / flip / mute. */
+.share-btn {
+  position: absolute;
+  right: calc(10px + var(--safe-r));
+  bottom: calc(12px + var(--safe-b));
+  left: auto;
+  z-index: 13;
+  appearance: none;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 14px;
+  min-height: 44px;
+  cursor: pointer;
+  gap: 6px;
+  color: var(--ink);
+}
+
+.share-btn:disabled {
+  opacity: 0.65;
+}
+
+.share-icon {
+  display: block;
+  flex: 0 0 auto;
+}
+
 #toast {
   position: absolute;
   left: 50%;
@@ -529,7 +623,7 @@ button.retry {
   font-size: 13px;
   opacity: 0;
   pointer-events: none;
-  z-index: 9;
+  z-index: 14;
   transition: opacity 0.25s ease, transform 0.25s ease;
   white-space: nowrap;
   max-width: calc(100% - 32px);
