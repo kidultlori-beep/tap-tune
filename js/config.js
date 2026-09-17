@@ -1,4 +1,4 @@
-/** Finger Garden — finger type → plant emoji → pitch */
+/** Finger Garden — finger type → plant emoji. Pitch is screen-space, not anatomy. */
 
 export const TIP_INDEX = {
   thumb: 4,
@@ -56,9 +56,8 @@ export const STEM_COLORS = [
 ];
 
 /**
- * Fixed mapping. MediaPipe handedness is the person's physical hand.
- * After selfie mirroring, the person's right hand appears on the right.
- * Eight non-thumb fingers = one rising C major scale (Do Re Mi Fa Sol La Ti Do).
+ * Plant overlays only. MediaPipe handedness is the person's physical hand.
+ * Pitch is NOT stored here — see SCREEN_SCALE / pitchForPinch.
  */
 export const FINGER_MAP = {
   "Left-index": {
@@ -67,9 +66,6 @@ export const FINGER_MAP = {
     finger: "index",
     label: "Left index",
     emoji: "🌸",
-    note: "C5",
-    solfege: "Do",
-    freq: 523.25,
   },
   "Left-middle": {
     key: "Left-middle",
@@ -77,9 +73,6 @@ export const FINGER_MAP = {
     finger: "middle",
     label: "Left middle",
     emoji: "🌼",
-    note: "D5",
-    solfege: "Re",
-    freq: 587.33,
   },
   "Left-ring": {
     key: "Left-ring",
@@ -87,9 +80,6 @@ export const FINGER_MAP = {
     finger: "ring",
     label: "Left ring",
     emoji: "🌺",
-    note: "E5",
-    solfege: "Mi",
-    freq: 659.25,
   },
   "Left-pinky": {
     key: "Left-pinky",
@@ -97,9 +87,6 @@ export const FINGER_MAP = {
     finger: "pinky",
     label: "Left pinky",
     emoji: "🌷",
-    note: "F5",
-    solfege: "Fa",
-    freq: 698.46,
   },
   "Right-index": {
     key: "Right-index",
@@ -107,9 +94,6 @@ export const FINGER_MAP = {
     finger: "index",
     label: "Right index",
     emoji: "🌻",
-    note: "G5",
-    solfege: "Sol",
-    freq: 783.99,
   },
   "Right-middle": {
     key: "Right-middle",
@@ -117,9 +101,6 @@ export const FINGER_MAP = {
     finger: "middle",
     label: "Right middle",
     emoji: "🌹",
-    note: "A5",
-    solfege: "La",
-    freq: 880.0,
   },
   "Right-ring": {
     key: "Right-ring",
@@ -127,9 +108,6 @@ export const FINGER_MAP = {
     finger: "ring",
     label: "Right ring",
     emoji: "🪻",
-    note: "B5",
-    solfege: "Ti",
-    freq: 987.77,
   },
   "Right-pinky": {
     key: "Right-pinky",
@@ -137,11 +115,59 @@ export const FINGER_MAP = {
     finger: "pinky",
     label: "Right pinky",
     emoji: "🍀",
-    note: "C6",
-    solfege: "Do",
-    freq: 1046.5,
   },
 };
+
+/**
+ * On-screen left → right among visible non-thumb tips.
+ * Rank 0 is the left edge of the picture (after selfie mirroring).
+ * A4 = 440 Hz equal temperament.
+ */
+export const SCREEN_SCALE = [
+  { note: "A4", freq: 440.0 },
+  { note: "C5", freq: 523.25 },
+  { note: "D5", freq: 587.33 },
+  { note: "E5", freq: 659.25 },
+  { note: "F5", freq: 698.46 },
+  { note: "G5", freq: 783.99 },
+  { note: "A5", freq: 880.0 },
+  { note: "B5", freq: 987.77 },
+];
+
+export function listVisibleNonThumbTips(hands) {
+  const tips = [];
+  if (!hands) return tips;
+  for (const hand of hands) {
+    for (const finger of NON_THUMB_FINGERS) {
+      const tip = hand.tips?.[finger];
+      if (!tip || !Number.isFinite(tip.x)) continue;
+      tips.push({
+        key: fingerKey(hand.hand, finger),
+        x: tip.x,
+        y: Number.isFinite(tip.y) ? tip.y : 0,
+      });
+    }
+  }
+  return tips;
+}
+
+export function rankTipsLeftToRight(hands) {
+  return listVisibleNonThumbTips(hands).sort((a, b) => {
+    if (a.x !== b.x) return a.x - b.x;
+    if (a.y !== b.y) return a.y - b.y;
+    return a.key.localeCompare(b.key);
+  });
+}
+
+/** Pitch for a pinched non-thumb tip from its current screen-X rank. */
+export function pitchForPinch(hands, key) {
+  const ranked = rankTipsLeftToRight(hands);
+  let i = ranked.findIndex((t) => t.key === key);
+  if (i < 0) i = 0;
+  i = Math.min(i, SCREEN_SCALE.length - 1);
+  const step = SCREEN_SCALE[i];
+  return { note: step.note, freq: step.freq, index: i };
+}
 
 export const MILESTONE_EVERY = 20;
 export const MAX_PLANTS = 28;

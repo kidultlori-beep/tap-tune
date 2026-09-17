@@ -4,7 +4,7 @@
  * Camera garden only — query flags such as ?demo=1 are ignored.
  */
 
-import { FINGER_MAP, MILESTONE_EVERY, FINGER_TYPES } from "./config.js";
+import { FINGER_MAP, MILESTONE_EVERY, SCREEN_SCALE, pitchForPinch } from "./config.js";
 import { GardenAudio } from "./audio.js";
 import { CameraFeed, canSwitchCamera } from "./camera.js";
 import { PinchDetector } from "./pinch.js";
@@ -139,10 +139,10 @@ function enterGardenChrome() {
 }
 
 function sowFromPinch(event) {
-  const spec = FINGER_MAP[event.key];
-  if (!spec) return;
+  if (!FINGER_MAP[event.key]) return;
   const plant = garden.sow(event.key, event.x, event.y);
-  audio.playFinger(spec.freq);
+  const pitch = pitchForPinch(lastHands, event.key);
+  audio.playFinger(pitch.freq);
   return plant;
 }
 
@@ -324,12 +324,10 @@ function bind() {
       return looks?.mode || "raw";
     },
     get scale() {
-      return FINGER_TYPES.map((k) => ({
-        key: k,
-        note: FINGER_MAP[k].note,
-        freq: FINGER_MAP[k].freq,
-        solfege: FINGER_MAP[k].solfege,
-      }));
+      return SCREEN_SCALE;
+    },
+    pitchFor(key) {
+      return pitchForPinch(lastHands, key);
     },
   };
 }

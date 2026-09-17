@@ -1,4 +1,4 @@
-/** Web Audio garden tones — one C major pitch per non-thumb finger. */
+/** Web Audio garden tones — screen-left → A, screen-right → B. */
 
 export class GardenAudio {
   constructor() {
