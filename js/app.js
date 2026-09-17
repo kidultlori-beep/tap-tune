@@ -1,16 +1,16 @@
 /**
  * Finger Garden
- * Static SPA: camera + MediaPipe Hands globals + emoji drop pile.
+ * Static SPA: camera + MediaPipe Hands globals + pinch-to-plant garden.
+ * Camera garden only — query flags such as ?demo=1 are ignored.
  */
 
-import { FINGER_MAP, FINGER_TYPES, MILESTONE_EVERY } from "./config.js";
+import { FINGER_MAP, MILESTONE_EVERY } from "./config.js";
 import { GardenAudio } from "./audio.js";
-import { CameraFeed, canSwitchCamera, isDemoQuery, isFastQuery } from "./camera.js";
+import { CameraFeed, canSwitchCamera } from "./camera.js";
 import { PinchDetector } from "./pinch.js";
 import { Garden } from "./garden.js";
 import { Overlays } from "./overlays.js";
 import { HandsTracker, hasWebGL } from "./hands-tracker.js";
-import { DemoHands } from "./demo.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -24,7 +24,6 @@ const ui = {
   crittersLayer: $("critters-layer"),
   start: $("start-screen"),
   btnStart: $("btn-start"),
-  btnDemo: $("btn-demo"),
   btnRetry: $("btn-retry"),
   status: $("start-status"),
   fallback: $("fallback-copy"),
@@ -32,7 +31,6 @@ const ui = {
   bloomCount: $("bloom-count"),
   btnMute: $("btn-mute"),
   btnFlip: $("btn-flip"),
-  demoDock: $("demo-dock"),
   toast: $("toast"),
 };
 
@@ -47,8 +45,7 @@ const pinch = new PinchDetector();
 
 let camera = null;
 let tracker = null;
-let demo = null;
-let mode = "idle"; // idle | live | demo | hybrid
+let mode = "idle"; // idle | live
 let lastHands = [];
 let lastT = performance.now();
 let lastMilestone = 0;
@@ -70,49 +67,40 @@ function showFallback(reason) {
   ui.btnRetry.hidden = false;
   ui.btnStart.hidden = true;
   if (reason === "denied") {
-    ui.fallback.innerHTML =
-      "Camera permission is off. Allow the camera in browser settings, or use Demo mode.<br /><span class='hint'>You can also open <code>/?demo=1</code></span>";
+    ui.fallback.textContent =
+      "Camera permission is off. Allow the camera in your browser settings, then tap Retry.";
   } else if (reason === "unsupported") {
-    ui.fallback.innerHTML =
-      "This browser cannot use the camera. Try Demo mode, or open the page over HTTPS / localhost.";
+    ui.fallback.textContent =
+      "This browser cannot use the camera. Open this page over HTTPS on a phone, or localhost on a computer.";
   } else {
-    ui.fallback.innerHTML =
-      "No camera found. You can still enter the demo garden and tap to plant.";
+    ui.fallback.textContent =
+      "No camera found. Connect a camera or try again on a phone over HTTPS.";
   }
   setStatus("");
-}
-
-function floorInset() {
-  const dock = !ui.demoDock.hidden ? 58 : 22;
-  const twitter = 32;
-  return dock + twitter;
 }
 
 function layout() {
   const w = window.innerWidth;
   const h = window.innerHeight;
-  garden.resize(w, h, floorInset());
+  garden.resize(w, h, 52);
 }
 
 function setHudBloom() {
   ui.bloomCount.textContent = String(garden.bloomCount);
 }
 
-function enterGardenChrome({ demoMode = false, keepCamera = false } = {}) {
+function enterGardenChrome() {
   ui.start.classList.add("is-hidden");
   ui.hud.hidden = false;
-  ui.app.classList.toggle("is-demo", demoMode && !keepCamera);
-  ui.app.classList.toggle("has-demo-dock", demoMode);
-  ui.demoDock.hidden = !demoMode;
-  ui.video.classList.toggle("is-off", !keepCamera);
-  ui.stage.classList.toggle("demo-stage", !keepCamera);
+  ui.app.classList.add("in-garden");
+  ui.video.classList.remove("is-off");
   layout();
 }
 
 function sowFromPinch(event) {
   const spec = FINGER_MAP[event.key];
   if (!spec) return;
-  const plant = garden.sow(event.key, event.x, event.y, { fast: isFastQuery() });
+  const plant = garden.sow(event.key, event.x, event.y);
   audio.playFinger(spec.freq);
   return plant;
 }
@@ -138,15 +126,7 @@ function frame(now) {
   const dt = Math.min(0.05, (now - lastT) / 1000);
   lastT = now;
 
-  let hands = lastHands;
-  if (mode === "demo" && demo) {
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    hands = demo.update(dt, w, h);
-    lastHands = hands;
-  }
-
-  const sowed = pinch.update(hands);
+  const sowed = pinch.update(lastHands);
   for (const s of sowed) sowFromPinch(s);
 
   const pinching = {};
@@ -156,7 +136,7 @@ function frame(now) {
     if (!pinching[hand]) pinching[hand] = {};
     pinching[hand][finger] = st.pinching;
   }
-  const overlayHands = hands.map((h) => ({
+  const overlayHands = lastHands.map((h) => ({
     ...h,
     pinching: pinching[h.hand] || {},
   }));
@@ -187,6 +167,10 @@ async function startLive() {
     return;
   }
 
+  mode = "live";
+  enterGardenChrome();
+  beginLoop();
+
   try {
     if (!hasWebGL() || typeof window.Hands !== "function") {
       throw new Error("hands-unavailable");
@@ -200,20 +184,12 @@ async function startLive() {
     });
     tracker.mirrored = camera.mirrored;
     await tracker.init();
+    tracker.start();
+    toast("Pinch thumb and finger to plant");
   } catch (err) {
     console.warn(err);
-    mode = "hybrid";
-    enterGardenChrome({ demoMode: true, keepCamera: true });
-    beginLoop();
-    toast("Hand tracking is unavailable. Camera stays on — tap a seed to plant.");
-    return;
+    toast("Camera is on, but hand tracking could not start.");
   }
-
-  mode = "live";
-  enterGardenChrome({ demoMode: false, keepCamera: true });
-  tracker.start();
-  beginLoop();
-  toast("Pinch thumb and finger to plant");
 }
 
 function beginLoop() {
@@ -223,53 +199,11 @@ function beginLoop() {
   requestAnimationFrame(frame);
 }
 
-async function startDemo(fromQuery = false) {
-  if (!fromQuery) await audio.unlock();
-  if (camera) camera.stop();
-  if (tracker) tracker.stop();
-  pinch.reset();
-  demo = new DemoHands();
-  mode = "demo";
-  enterGardenChrome({ demoMode: true, keepCamera: false });
-  beginLoop();
-  toast(fromQuery ? "Demo mode /?demo=1" : "Demo mode: tap a seed or wait for a pinch");
-}
-
-function buildDemoDock() {
-  ui.demoDock.innerHTML = "";
-  const label = document.createElement("span");
-  label.className = "dock-label";
-  label.textContent = "Demo sow";
-  ui.demoDock.appendChild(label);
-  for (const key of FINGER_TYPES) {
-    const spec = FINGER_MAP[key];
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "seed-btn";
-    btn.title = `${spec.label} · ${spec.note}`;
-    btn.textContent = spec.emoji;
-    btn.addEventListener("click", async () => {
-      await audio.unlock();
-      const x = window.innerWidth * (spec.hand === "Left" ? 0.33 : 0.67);
-      const y = window.innerHeight * 0.38;
-      sowFromPinch({
-        key,
-        x,
-        y,
-        hand: spec.hand,
-        finger: spec.finger,
-      });
-    });
-    ui.demoDock.appendChild(btn);
-  }
-}
-
 function bind() {
   window.alert = (msg) => {
     console.warn("[alert]", msg);
   };
   ui.btnStart.addEventListener("click", () => startLive());
-  ui.btnDemo.addEventListener("click", () => startDemo(false));
   ui.btnRetry.addEventListener("click", () => {
     ui.fallback.hidden = true;
     ui.btnRetry.hidden = true;
@@ -304,22 +238,6 @@ function bind() {
     { passive: false }
   );
 
-  ui.stage.addEventListener("pointerdown", async (e) => {
-    if (mode === "live") return;
-    if (e.target.closest("button, a")) return;
-    await audio.unlock();
-    const keys = FINGER_TYPES;
-    const key = keys[(Math.random() * keys.length) | 0];
-    sowFromPinch({
-      key,
-      x: e.clientX,
-      y: e.clientY,
-      hand: key.split("-")[0],
-      finger: key.split("-")[1],
-    });
-  });
-
-  buildDemoDock();
   layout();
 
   window.FingerGarden = {
@@ -329,20 +247,7 @@ function bind() {
     get bloomCount() {
       return garden.bloomCount;
     },
-    sow(key, x, y) {
-      return sowFromPinch({
-        key,
-        x: x ?? window.innerWidth * 0.5,
-        y: y ?? window.innerHeight * 0.35,
-        hand: key.split("-")[0],
-        finger: key.split("-")[1],
-      });
-    },
   };
-
-  if (isDemoQuery()) {
-    startDemo(true);
-  }
 }
 
 bind();

@@ -15,7 +15,7 @@ GitHub Pages is enabled on this repo:
 
 Pages currently publishes the PR branch `cursor/finger-garden-8e3d`. After this PR is merged to `main`, point Pages at `main` (or keep the branch) so the same URL stays current.
 
-Demo without a camera: https://kidultlori-beep.github.io/tap-tune/?demo=1
+Camera access requires HTTPS (or localhost). The Pages URL above is the phone preview.
 
 ## Run locally
 
@@ -25,15 +25,14 @@ Camera access needs a [secure context](https://developer.mozilla.org/en-US/docs/
 python3 -m http.server 8080
 ```
 
-- Live: http://localhost:8080/
-- Demo: http://localhost:8080/?demo=1
+Then open http://localhost:8080/
 
 ### Mobile
 
 - Use **HTTPS** (GitHub Pages above, or localhost via USB port-forward).
 - Tap **Enter garden**, allow the camera, pinch thumb to each fingertip.
 - Front camera is mirrored; **🔄** flips to the back camera on phones. On desktop the flip button is a silent no-op.
-- If permission is denied, use **Demo mode** or `/?demo=1` — no native `alert()`.
+- If permission is denied, allow the camera in browser settings and tap **Retry camera**. No native `alert()`.
 
 ## CDN libraries
 
@@ -66,11 +65,6 @@ Lifecycle: pinch → gravity drop to the floor → grow a **thin pastel stem** o
 
 One pinch = one plant; release before sowing again. Each pinch still plays that finger’s pitch.
 
-## Demo mode
-
-- Start screen → **Demo mode**, or `/?demo=1`.
-- Simulated hands that occasionally pinch, plus a **Demo sow** dock, or tap the stage.
-
 Every **20** landed emojis, 5 🦋 + 1 🐦 fly across.
 
 ## Project layout
@@ -78,7 +72,7 @@ Every **20** landed emojis, 5 🦋 + 1 🐦 fly across.
 ```
 index.html      SPA shell, MediaPipe <script> tags
 css/styles.css  Garden UI
-js/app.js       Orchestration
+js/app.js       Camera-garden orchestration
 js/config.js    Finger map + plant glyph pool
 js/camera.js    getUserMedia, contain-fit, front/back flip
 js/hands-tracker.js  window.Hands loop
@@ -86,5 +80,4 @@ js/pinch.js     Debounced pinch → sow
 js/garden.js    Gravity drop, pastel stem grow, fade
 js/audio.js     Web Audio tones + mute
 js/overlays.js  Fingertip glyphs, ✨, critters
-js/demo.js      Camera-free skeleton
 ```

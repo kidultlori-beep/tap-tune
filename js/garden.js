@@ -35,10 +35,9 @@ export class Garden {
     this.floorInset = floorInset;
   }
 
-  sow(fingerKey, x, y, opts = {}) {
+  sow(fingerKey, x, y) {
     const spec = FINGER_MAP[fingerKey] || FINGER_MAP["Left-index"];
     const emoji = pickDropEmoji();
-    const fast = !!opts.fast;
     const wrap = document.createElement("div");
     wrap.className = "plant";
     const stem = document.createElement("div");
@@ -90,9 +89,9 @@ export class Garden {
       floorY: floor,
       stemH: rand(minH, maxH),
       stemColor: pick(STEM_COLORS),
-      growDur: fast ? 0.22 : rand(0.55, 1.05),
-      liveDur: fast ? 0.45 : rand(3.0, 5.0),
-      fadeDur: fast ? 0.28 : rand(0.55, 0.9),
+      growDur: rand(0.55, 1.05),
+      liveDur: rand(3.0, 5.0),
+      fadeDur: rand(0.55, 0.9),
       sway: rand(0, Math.PI * 2),
       counted: false,
       faded: false,

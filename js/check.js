@@ -2,6 +2,9 @@
  * Node-side sanity checks for mapping, pinch debounce, and plant pool.
  *   node js/check.js
  */
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { FINGER_MAP, FINGER_TYPES, PLANT_POOL, pickDropEmoji } from "./config.js";
 import { PinchDetector } from "./pinch.js";
 
@@ -88,6 +91,15 @@ const released = d.update(mk(80));
 assert(released.length === 0, "release does not sow");
 const again = d.update(mk(8));
 assert(again.length === 1, "new pinch sows again");
+
+const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const html = readFileSync(join(root, "index.html"), "utf8");
+const css = readFileSync(join(root, "css/styles.css"), "utf8");
+const app = readFileSync(join(root, "js/app.js"), "utf8");
+assert(!/demo-dock|btn-demo|Demo mode|Demo sow/i.test(html), "HTML has no demo UI");
+assert(!/#demo-dock|has-demo-dock|demo-stage/.test(css), "CSS has no demo chrome");
+assert(!/btn-demo|DemoHands|startDemo|isDemoQuery/.test(app), "app.js has no demo entry");
+assert(!/demo\.js/.test(html), "demo.js is not loaded");
 
 if (failed) {
   console.error(`\n${failed} check(s) failed`);

@@ -47,15 +47,6 @@ body {
     linear-gradient(180deg, #8fb8d4 0%, #d7e8c8 38%, #e9ddb8 70%, #c9b48a 100%);
 }
 
-#stage.demo-stage::before {
-  content: "";
-  position: absolute;
-  inset: auto 0 0 0;
-  height: 28%;
-  background: linear-gradient(180deg, transparent, rgba(63, 107, 69, 0.22));
-  pointer-events: none;
-}
-
 #camera {
   position: absolute;
   inset: 0;
@@ -267,72 +258,34 @@ body {
   opacity: 0.7;
 }
 
-#demo-dock {
-  position: absolute;
-  left: calc(10px + var(--safe-l));
-  right: calc(10px + var(--safe-r));
-  bottom: calc(10px + var(--safe-b));
-  z-index: 8;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 8px 6px 10px;
-  background: var(--glass);
-  backdrop-filter: blur(14px);
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  box-shadow: var(--shadow);
-  max-width: none;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-x manipulation;
-}
-
-.dock-label {
-  font-size: 10px;
-  white-space: nowrap;
-  opacity: 0.8;
-}
-
-.seed-btn {
-  touch-action: manipulation;
-  width: 36px;
-  height: 36px;
-  border: 0;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.7);
-  font-size: 18px;
-  cursor: pointer;
-  flex: 0 0 auto;
-  line-height: 1;
-}
-
-.seed-btn:active {
-  transform: scale(0.94);
-}
-
 #x-link {
   position: absolute;
-  right: calc(10px + var(--safe-r));
+  left: calc(10px + var(--safe-l));
+  right: auto;
   bottom: calc(10px + var(--safe-b));
-  z-index: 9;
+  z-index: 13;
   color: var(--ink);
   text-decoration: none;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
-  padding: 4px 8px;
+  letter-spacing: 0.01em;
+  padding: 5px 9px;
   border-radius: 999px;
   background: var(--glass);
   backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.5);
   touch-action: manipulation;
   pointer-events: auto;
   line-height: 1.2;
+  max-width: calc(100% - 24px - var(--safe-l) - var(--safe-r));
 }
 
-/* Dock visible (demo or hybrid camera): keep the handle above the sow chips. */
-#app.has-demo-dock #x-link {
-  bottom: calc(68px + var(--safe-b));
+/* Garden HUD lives top-right; keep the handle bottom-left, clear of those pills. */
+#app.in-garden #x-link {
+  left: calc(10px + var(--safe-l));
+  right: auto;
+  bottom: calc(12px + var(--safe-b));
 }
 
 #start-screen {
@@ -341,7 +294,7 @@ body {
   z-index: 12;
   display: grid;
   place-items: center;
-  padding: calc(20px + var(--safe-t)) 20px calc(20px + var(--safe-b));
+  padding: calc(20px + var(--safe-t)) 20px calc(48px + var(--safe-b));
   background:
     radial-gradient(circle at 20% 20%, rgba(255, 220, 180, 0.45), transparent 40%),
     radial-gradient(circle at 80% 10%, rgba(244, 184, 200, 0.35), transparent 36%),
@@ -407,7 +360,6 @@ body {
 }
 
 button.primary,
-button.ghost,
 button.retry {
   touch-action: manipulation;
   appearance: none;
@@ -427,12 +379,6 @@ button.primary {
 
 button.primary:disabled {
   opacity: 0.65;
-}
-
-button.ghost {
-  background: rgba(255, 255, 255, 0.55);
-  color: var(--ink);
-  border: 1px solid rgba(255, 255, 255, 0.8);
 }
 
 button.retry {

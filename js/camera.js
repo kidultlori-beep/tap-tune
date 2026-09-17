@@ -2,19 +2,6 @@
 
 import { clamp } from "./config.js";
 
-export function isDemoQuery() {
-  const q = new URLSearchParams(location.search);
-  return q.get("demo") === "1" || q.get("demo") === "true";
-}
-
-export function isFastQuery() {
-  try {
-    return new URLSearchParams(location.search).get("fast") === "1";
-  } catch {
-    return false;
-  }
-}
-
 /** True when a facingMode switch is meaningful (phone/tablet). Desktop is a silent no-op. */
 export function canSwitchCamera() {
   const ua = navigator.userAgent || "";
@@ -138,7 +125,7 @@ export class CameraFeed {
       try {
         await this.start(prev);
       } catch {
-        /* leave stopped; caller keeps demo fallback if needed */
+        /* leave stopped */
       }
       return { flipped: false };
     }
