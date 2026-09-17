@@ -269,38 +269,39 @@ body {
 
 #demo-dock {
   position: absolute;
-  left: 50%;
-  bottom: calc(14px + var(--safe-b));
-  transform: translateX(-50%);
+  left: calc(10px + var(--safe-l));
+  right: calc(10px + var(--safe-r));
+  bottom: calc(10px + var(--safe-b));
   z-index: 8;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 10px 8px 14px;
+  gap: 6px;
+  padding: 6px 8px 6px 10px;
   background: var(--glass);
   backdrop-filter: blur(14px);
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.5);
   box-shadow: var(--shadow);
-  max-width: calc(100% - 20px);
+  max-width: none;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   touch-action: pan-x manipulation;
 }
 
 .dock-label {
-  font-size: 12px;
+  font-size: 10px;
   white-space: nowrap;
   opacity: 0.8;
 }
 
 .seed-btn {
   touch-action: manipulation;
-  width: 42px;
-  height: 42px;
+  width: 36px;
+  height: 36px;
   border: 0;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.7);
-  font-size: 22px;
+  font-size: 18px;
   cursor: pointer;
   flex: 0 0 auto;
   line-height: 1;
@@ -312,25 +313,26 @@ body {
 
 #x-link {
   position: absolute;
-  right: calc(12px + var(--safe-r));
-  bottom: calc(12px + var(--safe-b));
+  right: calc(10px + var(--safe-r));
+  bottom: calc(10px + var(--safe-b));
   z-index: 9;
   color: var(--ink);
   text-decoration: none;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
-  padding: 6px 10px;
+  padding: 4px 8px;
   border-radius: 999px;
   background: var(--glass);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.5);
   touch-action: manipulation;
   pointer-events: auto;
+  line-height: 1.2;
 }
 
-#app.is-demo #x-link,
-#demo-dock:not([hidden]) ~ #x-link {
-  bottom: calc(78px + var(--safe-b));
+/* Dock visible (demo or hybrid camera): keep the handle above the sow chips. */
+#app.has-demo-dock #x-link {
+  bottom: calc(68px + var(--safe-b));
 }
 
 #start-screen {

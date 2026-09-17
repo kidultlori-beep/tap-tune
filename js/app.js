@@ -83,8 +83,8 @@ function showFallback(reason) {
 }
 
 function floorInset() {
-  const dock = !ui.demoDock.hidden ? 70 : 28;
-  const twitter = 36;
+  const dock = !ui.demoDock.hidden ? 58 : 22;
+  const twitter = 32;
   return dock + twitter;
 }
 
@@ -102,6 +102,7 @@ function enterGardenChrome({ demoMode = false, keepCamera = false } = {}) {
   ui.start.classList.add("is-hidden");
   ui.hud.hidden = false;
   ui.app.classList.toggle("is-demo", demoMode && !keepCamera);
+  ui.app.classList.toggle("has-demo-dock", demoMode);
   ui.demoDock.hidden = !demoMode;
   ui.video.classList.toggle("is-off", !keepCamera);
   ui.stage.classList.toggle("demo-stage", !keepCamera);
