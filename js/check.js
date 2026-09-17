@@ -5,7 +5,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { FINGER_MAP, FINGER_TYPES, PLANT_POOL, pickDropEmoji, FILTER_STORAGE_KEY, SCREEN_SCALE, pitchForPinch } from "./config.js";
+import { FINGER_MAP, FINGER_TYPES, PLANT_POOL, pickDropEmoji, FILTER_STORAGE_KEY, SCREEN_SCALE, pitchForPinch, FRONT_FINGER_PITCH, BACK_FINGER_PITCH } from "./config.js";
 import { PinchDetector } from "./pinch.js";
 import { landmarkToScreen } from "./camera.js";
 import { readFilterPref, FILTER_IDS } from "./beauty.js";
@@ -62,43 +62,46 @@ assert(
   "screen scale rises left to right"
 );
 
-function handsFromTips(entries) {
-  const byHand = new Map();
-  for (const e of entries) {
-    let hand = byHand.get(e.hand);
-    if (!hand) {
-      hand = { hand: e.hand, tips: {}, scale: 80 };
-      byHand.set(e.hand, hand);
-    }
-    hand.tips[e.finger] = { x: e.x, y: e.y ?? 100 };
-  }
-  return [...byHand.values()];
+const FRONT_ORDER = [
+  ["Right-pinky", "A4"],
+  ["Right-ring", "C5"],
+  ["Right-middle", "D5"],
+  ["Right-index", "E5"],
+  ["Left-index", "F5"],
+  ["Left-middle", "G5"],
+  ["Left-ring", "A5"],
+  ["Left-pinky", "B5"],
+];
+const BACK_ORDER = [
+  ["Left-pinky", "A4"],
+  ["Left-ring", "C5"],
+  ["Left-middle", "D5"],
+  ["Left-index", "E5"],
+  ["Right-index", "F5"],
+  ["Right-middle", "G5"],
+  ["Right-ring", "A5"],
+  ["Right-pinky", "B5"],
+];
+
+for (const [key, note] of FRONT_ORDER) {
+  assert(pitchForPinch(key, { mirrored: true }).note === note, `front ${key} ${note}`);
 }
-
-const crossed = handsFromTips([
-  { hand: "Right", finger: "pinky", x: 20 },
-  { hand: "Right", finger: "ring", x: 40 },
-  { hand: "Right", finger: "middle", x: 60 },
-  { hand: "Right", finger: "index", x: 80 },
-  { hand: "Left", finger: "index", x: 120 },
-  { hand: "Left", finger: "middle", x: 140 },
-  { hand: "Left", finger: "ring", x: 160 },
-  { hand: "Left", finger: "pinky", x: 180 },
-]);
-assert(pitchForPinch(crossed, "Right-pinky").note === "A4", "leftmost on screen is A4 even if it is Right-pinky");
-assert(pitchForPinch(crossed, "Left-pinky").note === "B5", "rightmost on screen is B5 even if it is Left-pinky");
-assert(pitchForPinch(crossed, "Right-index").note === "E5", "fourth visible tip is E5");
-assert(pitchForPinch(crossed, "Left-index").note === "F5", "fifth visible tip is F5");
-assert(pitchForPinch(crossed, "Left-middle").note === "G5", "anatomy does not own G5");
-
-const few = handsFromTips([
-  { hand: "Left", finger: "index", x: 300 },
-  { hand: "Left", finger: "middle", x: 100 },
-  { hand: "Right", finger: "index", x: 200 },
-]);
-assert(pitchForPinch(few, "Left-middle").note === "A4", "few tips: leftmost A4");
-assert(pitchForPinch(few, "Right-index").note === "C5", "few tips: second C5");
-assert(pitchForPinch(few, "Left-index").note === "D5", "few tips: third D5");
+for (const [key, note] of BACK_ORDER) {
+  assert(pitchForPinch(key, { mirrored: false }).note === note, `back ${key} ${note}`);
+}
+assert(pitchForPinch("Right-index", { mirrored: true }).note === "E5", "wobble: Right-index stays E5 on front");
+assert(pitchForPinch("Right-index", { mirrored: false }).note === "F5", "back camera remaps Right-index to F5");
+assert(
+  new Set(FINGER_TYPES.map((k) => pitchForPinch(k, { mirrored: true }).note)).size === 8,
+  "front: eight distinct notes"
+);
+assert(
+  new Set(FINGER_TYPES.map((k) => pitchForPinch(k, { mirrored: false }).note)).size === 8,
+  "back: eight distinct notes"
+);
+assert(Object.keys(FRONT_FINGER_PITCH).length === 8, "front table has 8 fingers");
+assert(Object.keys(BACK_FINGER_PITCH).length === 8, "back table has 8 fingers");
+assert(pitchForPinch("Right-pinky").letter === "A", "note letter for HUD flash");
 
 const mirroredLeft = landmarkToScreen({ x: 1, y: 0.5 }, { x: 0, y: 0, w: 100, h: 100 }, true);
 const backLeft = landmarkToScreen({ x: 0, y: 0.5 }, { x: 0, y: 0, w: 100, h: 100 }, false);
@@ -151,7 +154,12 @@ assert(!/demo-dock|btn-demo|Demo mode|Demo sow/i.test(html), "HTML has no demo U
 assert(!/#demo-dock|has-demo-dock|demo-stage/.test(css), "CSS has no demo chrome");
 assert(!/btn-demo|DemoHands|startDemo|isDemoQuery/.test(app), "app.js has no demo entry");
 assert(!/demo\.js/.test(html), "demo.js is not loaded");
-assert(/pitchForPinch/.test(app), "pinch pitch uses screen rank");
+assert(/pitchForPinch/.test(app), "pinch uses stable finger pitch");
+assert(/mirrored/.test(app) && /flashNote/.test(app), "pitch uses camera mirror + note flash");
+assert(!/rankTipsLeftToRight/.test(app), "app does not live-rank tips for pitch");
+assert(/spawnCritter/.test(app), "ambient random critters");
+assert(/critter-rtl/.test(css) && /critter-ltr/.test(css), "critters can fly both directions");
+assert(/note-flash/.test(css), "pinch note flash style");
 assert(!/spec\.freq/.test(app), "app does not play anatomical freq");
 assert(/A C D E F G A B/.test(html), "landing left-to-right scale hint");
 assert(!/Do Re Mi Fa/.test(html) && !/Sol La Ti Do/.test(html), "old solfege copy gone");
@@ -170,6 +178,11 @@ assert(/bayer4/.test(beautySrc) && /LCD_FRAG/.test(beautySrc), "LCD Bayer dot-ma
 assert(/FILM_FRAG/.test(beautySrc) && /filmCurve/.test(beautySrc), "Film analog grade shader");
 assert(/DREAM_FRAG/.test(beautySrc) && /vec2 ca/.test(beautySrc), "Dream bloom + chromatic aberration");
 assert(/setMode/.test(beautySrc), "looks can switch including raw");
+
+const overlaySrc = readFileSync(join(root, "js/overlays.js"), "utf8");
+assert(/spawnCritter/.test(overlaySrc), "overlays spawn a single random critter");
+assert(/_lastDir/.test(overlaySrc) && /CRITTER_DIRS/.test(overlaySrc), "critters avoid repeating direction");
+assert(/1\.85/.test(overlaySrc) || /2s/.test(css), "critters last about 2s");
 
 assert(SHARE_TITLE === "Finger Garden", "share title");
 assert(SHARE_LINE === "I planted a garden with my fingers", "share line");

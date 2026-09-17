@@ -1,4 +1,4 @@
-/** Web Audio garden tones — screen-left → A, screen-right → B. */
+/** Web Audio garden tones — each fingertip has a fixed pitch for the current camera. */
 
 export class GardenAudio {
   constructor() {

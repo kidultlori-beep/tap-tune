@@ -1,9 +1,9 @@
-/** DOM overlays: fingertip glyphs, tiny ✨, milestone fly-by. */
+/** DOM overlays: fingertip glyphs, tiny ✨, ambient 🦋/🐦. */
 
-import { FINGER_MAP, NON_THUMB_FINGERS, fingerKey, rand } from "./config.js";
+import { FINGER_MAP, NON_THUMB_FINGERS, fingerKey, pick, rand, randInt } from "./config.js";
 
-const BUTTERFLIES = ["🦋", "🦋", "🦋", "🦋", "🦋"];
-const BIRD = "🐦";
+const CRITTER_GLYPHS = ["🦋", "🦋", "🦋", "🐦"];
+const CRITTER_DIRS = ["ltr", "rtl", "diag-ltr", "diag-rtl"];
 
 export class Overlays {
   constructor({ emojiLayer, notesLayer, crittersLayer }) {
@@ -13,6 +13,7 @@ export class Overlays {
     /** @type {Map<string, HTMLElement>} */
     this.tips = new Map();
     this._nodes = [];
+    this._lastDir = null;
   }
 
   syncFingertips(hands) {
@@ -73,39 +74,51 @@ export class Overlays {
     setTimeout(() => el.remove(), dur * 1000 + 40);
   }
 
-  milestoneFlyby() {
-    const h = window.innerHeight;
-    const items = [
-      ...BUTTERFLIES.map((emoji, i) => ({
-        emoji,
-        y: h * (0.12 + i * 0.13) + rand(-18, 18),
-        delay: i * 0.18,
-        dur: rand(3.4, 4.6),
-        scale: rand(1.1, 1.6),
-        wobble: rand(8, 18),
-      })),
-      {
-        emoji: BIRD,
-        y: h * 0.42 + rand(-30, 30),
-        delay: 0.35,
-        dur: rand(2.8, 3.6),
-        scale: rand(1.5, 1.9),
-        wobble: 10,
-      },
-    ];
+  /** Brief note letter at the pinch (A C D E F G A B). */
+  flashNote(x, y, letter) {
+    if (!letter) return;
+    const el = document.createElement("div");
+    el.className = "note-flash";
+    el.textContent = letter;
+    el.style.left = `${x}px`;
+    el.style.top = `${y}px`;
+    this.notesLayer.appendChild(el);
+    const life = 720;
+    const rec = { el, born: performance.now(), life };
+    this._nodes.push(rec);
+    setTimeout(() => el.remove(), life + 40);
+  }
 
-    for (const item of items) {
-      const el = document.createElement("div");
-      el.className = "critter";
-      el.textContent = item.emoji;
-      el.style.top = `${item.y}px`;
-      el.style.setProperty("--dur", `${item.dur}s`);
-      el.style.setProperty("--delay", `${item.delay}s`);
-      el.style.setProperty("--scale", String(item.scale));
-      el.style.setProperty("--wobble", `${item.wobble}px`);
-      this.crittersLayer.appendChild(el);
-      const life = (item.dur + item.delay) * 1000 + 80;
-      setTimeout(() => el.remove(), life);
+  _pickDir() {
+    const choices = CRITTER_DIRS.filter((d) => d !== this._lastDir);
+    const dir = pick(choices.length ? choices : CRITTER_DIRS);
+    this._lastDir = dir;
+    return dir;
+  }
+
+  /** One butterfly or bird, random direction, ~2s then gone. */
+  spawnCritter() {
+    const dir = this._pickDir();
+    const el = document.createElement("div");
+    el.className = `critter critter-${dir}`;
+    el.textContent = pick(CRITTER_GLYPHS);
+    const h = window.innerHeight || 800;
+    el.style.top = `${h * rand(0.12, 0.7)}px`;
+    const dur = rand(1.85, 2.15);
+    const dy = dir.startsWith("diag") ? rand(-90, 90) : rand(-22, 22);
+    el.style.setProperty("--dur", `${dur}s`);
+    el.style.setProperty("--dy", `${dy}px`);
+    el.style.setProperty("--scale", String(rand(1.05, 1.55)));
+    this.crittersLayer.appendChild(el);
+    setTimeout(() => el.remove(), dur * 1000 + 80);
+    return dir;
+  }
+
+  /** Bloom milestone: a few randomized critters, not a scripted parade. */
+  milestoneFlyby() {
+    const n = randInt(1, 3);
+    for (let i = 0; i < n; i++) {
+      setTimeout(() => this.spawnCritter(), i * 260);
     }
   }
 

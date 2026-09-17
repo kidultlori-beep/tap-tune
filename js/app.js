@@ -65,6 +65,7 @@ let lastHands = [];
 let lastT = performance.now();
 let lastMilestone = 0;
 let running = false;
+let nextCritterAt = 0;
 
 function toast(msg) {
   ui.toast.textContent = msg;
@@ -144,8 +145,9 @@ function enterGardenChrome() {
 function sowFromPinch(event) {
   if (!FINGER_MAP[event.key]) return;
   const plant = garden.sow(event.key, event.x, event.y);
-  const pitch = pitchForPinch(lastHands, event.key);
+  const pitch = pitchForPinch(event.key, { mirrored: camera?.mirrored ?? true });
   audio.playFinger(pitch.freq);
+  overlays.flashNote(event.x, event.y, pitch.letter);
   return plant;
 }
 
@@ -188,6 +190,11 @@ function frame(now) {
   }));
   overlays.syncFingertips(overlayHands);
   overlays.prune();
+
+  if (now >= nextCritterAt) {
+    overlays.spawnCritter();
+    nextCritterAt = now + 7000 + Math.random() * 9000;
+  }
 
   const events = garden.update(dt);
   handleGardenEvents(events);
@@ -253,6 +260,7 @@ function beginLoop() {
   if (running) return;
   running = true;
   lastT = performance.now();
+  nextCritterAt = lastT + 2800;
   requestAnimationFrame(frame);
 }
 
@@ -342,8 +350,11 @@ function bind() {
     get scale() {
       return SCREEN_SCALE;
     },
+    get mirrored() {
+      return camera?.mirrored ?? true;
+    },
     pitchFor(key) {
-      return pitchForPinch(lastHands, key);
+      return pitchForPinch(key, { mirrored: camera?.mirrored ?? true });
     },
     share() {
       return shareGarden({ bloomCount: garden.bloomCount, toast });
