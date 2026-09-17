@@ -188,37 +188,37 @@ void main() {
   vec3 src = texture2D(u_src, v_uv).rgb;
   vec3 bl = texture2D(u_blur, v_uv).rgb;
 
-  vec3 color = mix(src, bl, 0.28);
+  vec3 color = mix(src, bl, 0.22);
   float Lbl = luma(bl);
-  float mist = smoothstep(0.48, 0.86, Lbl);
-  color = mix(color, bl * vec3(1.18, 1.04, 0.76), mist * 0.62);
-  color += max(bl - vec3(0.55), vec3(0.0)) * vec3(1.32, 0.88, 0.28) * 1.15;
+  float mist = smoothstep(0.55, 0.90, Lbl);
+  color = mix(color, bl * vec3(1.10, 1.02, 0.86), mist * 0.48);
+  color += max(bl - vec3(0.62), vec3(0.0)) * vec3(1.18, 0.90, 0.42) * 0.85;
 
-  color = color * 0.93 + vec3(0.048, 0.052, 0.07);
+  color = color * 0.96 + vec3(0.038, 0.040, 0.052);
   color = filmCurve(color);
 
   float L = luma(color);
-  vec3 shadowTint = vec3(0.74, 0.94, 1.20);
-  vec3 highTint = vec3(1.26, 1.05, 0.64);
-  color *= mix(shadowTint, highTint, smoothstep(0.16, 0.70, L));
+  vec3 shadowTint = vec3(0.86, 0.96, 1.10);
+  vec3 highTint = vec3(1.14, 1.03, 0.78);
+  color *= mix(shadowTint, highTint, smoothstep(0.18, 0.74, L));
 
-  float warm = smoothstep(0.06, 0.42, color.r - color.b) * smoothstep(0.20, 0.82, L);
-  color.r = min(color.r + warm * 0.12, 1.0);
-  color.g = min(color.g + warm * 0.03, 1.0);
-  color.b = max(color.b - warm * 0.07, 0.0);
+  float warm = smoothstep(0.06, 0.42, color.r - color.b) * smoothstep(0.22, 0.82, L);
+  color.r = min(color.r + warm * 0.08, 1.0);
+  color.g = min(color.g + warm * 0.022, 1.0);
+  color.b = max(color.b - warm * 0.045, 0.0);
 
   float satL = luma(color);
-  color = mix(vec3(satL), color, 1.14);
+  color = mix(vec3(satL), color, 1.08);
 
   vec2 vc = v_uv - vec2(0.5, 0.47);
   vc.x *= u_px.x / max(u_px.y, 1.0);
-  float vig = smoothstep(0.26, 1.12, length(vc));
-  color *= 1.0 - vig * 0.34;
-  color = mix(color, color * vec3(1.10, 0.84, 0.58), vig * 0.24);
+  float vig = smoothstep(0.30, 1.14, length(vc));
+  color *= 1.0 - vig * 0.28;
+  color = mix(color, color * vec3(1.06, 0.88, 0.68), vig * 0.18);
 
   vec2 gp = gl_FragCoord.xy + vec2(u_time * 19.0, u_time * 7.0);
   float n = hash(gp) + hash(gp * 1.73 + 8.2) - 1.0;
-  color += n * 0.058;
+  color += n * 0.048;
 
   gl_FragColor = vec4(clamp(color, 0.0, 1.0), 1.0);
 }
@@ -250,7 +250,7 @@ void main() {
   float aspect = u_px.x / max(u_px.y, 1.0);
   float r = length(fromC * vec2(aspect, 1.0));
   vec2 dir = fromC / max(length(fromC), 0.0008);
-  vec2 ca = dir * r * 0.022 + vec2(6.0, 0.5) * px;
+  vec2 ca = dir * r * 0.014 + vec2(4.2, 0.4) * px;
 
   vec3 src;
   src.r = texture2D(u_src, v_uv + ca).r;
@@ -258,28 +258,28 @@ void main() {
   src.b = texture2D(u_src, v_uv - ca).b;
 
   vec3 bl;
-  bl.r = texture2D(u_blur, v_uv + ca * 0.65).r;
+  bl.r = texture2D(u_blur, v_uv + ca * 0.55).r;
   bl.g = texture2D(u_blur, v_uv).g;
-  bl.b = texture2D(u_blur, v_uv - ca * 0.65).b;
+  bl.b = texture2D(u_blur, v_uv - ca * 0.55).b;
 
-  float radial = smoothstep(0.06, 0.76, r);
-  vec3 color = mix(src, bl, 0.46 + radial * 0.40);
-  vec3 bleed = max(bl - vec3(0.34), vec3(0.0));
-  color += bleed * vec3(1.10, 0.88, 1.16) * (0.95 + radial * 0.45);
+  float radial = smoothstep(0.10, 0.82, r);
+  vec3 color = mix(src, bl, 0.30 + radial * 0.32);
+  vec3 bleed = max(bl - vec3(0.42), vec3(0.0));
+  color += bleed * vec3(1.06, 0.90, 1.10) * (0.72 + radial * 0.35);
 
-  color = color * 0.80 + vec3(0.145, 0.118, 0.142);
+  color = color * 0.88 + vec3(0.10, 0.082, 0.108);
   float g = luma(color);
-  color = mix(vec3(g), color, 0.88);
-  color = mix(color, vec3(0.52, 0.48, 0.52), 0.10);
+  color = mix(vec3(g), color, 0.92);
+  color = mix(color, vec3(0.55, 0.50, 0.54), 0.07);
 
-  color.r += 0.06;
-  color.g += 0.01;
-  color.b += 0.05;
-  color *= vec3(1.07, 0.94, 1.05);
+  color.r += 0.045;
+  color.g += 0.008;
+  color.b += 0.038;
+  color *= vec3(1.05, 0.96, 1.04);
 
   vec2 gp = gl_FragCoord.xy + u_time * vec2(23.0, 11.0);
   float n = hash(gp) * 0.68 + hash(gp * 2.13 + 4.1) * 0.32;
-  color += (n - 0.5) * 0.062;
+  color += (n - 0.5) * 0.05;
 
   gl_FragColor = vec4(clamp(color, 0.0, 1.0), 1.0);
 }
@@ -669,7 +669,7 @@ export class CameraFilter {
 
   drawDream() {
     if (!this._dream) return;
-    this._prepareBlur(1.6, 2.4);
+    this._prepareBlur(1.35, 1.8);
     this._drawGrade(this._dream);
   }
 
