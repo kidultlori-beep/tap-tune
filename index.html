@@ -53,15 +53,25 @@
       <header id="hud" hidden>
         <div class="hud-left">
           <div class="pill" aria-live="polite">Bloom <strong id="bloom-count">0</strong></div>
-          <button
-            id="btn-beauty"
-            class="pill beauty-toggle is-on"
-            type="button"
-            aria-pressed="true"
-            aria-label="Beauty filter on"
-          >
-            ✨ <span class="beauty-label">Beauty</span>
-          </button>
+          <div class="filter-menu" id="filter-menu">
+            <button
+              id="btn-filter"
+              class="pill filter-toggle"
+              type="button"
+              aria-haspopup="listbox"
+              aria-expanded="false"
+              aria-controls="filter-list"
+              aria-label="Camera look"
+            >
+              <span id="filter-label">LCD</span>
+              <span class="filter-caret" aria-hidden="true">▾</span>
+            </button>
+            <div id="filter-list" class="filter-list" role="listbox" hidden>
+              <button type="button" role="option" data-filter="raw">Off / Raw</button>
+              <button type="button" role="option" data-filter="natural">Soft Natural</button>
+              <button type="button" role="option" data-filter="lcd">LCD</button>
+            </div>
+          </div>
         </div>
         <div class="hud-actions">
           <button id="btn-flip" class="icon-btn" type="button" aria-label="Flip camera">🔄</button>
@@ -94,9 +104,6 @@
             <button id="btn-start" class="primary" type="button">Enter garden</button>
             <button id="btn-retry" class="retry" type="button" hidden>Retry camera</button>
           </div>
-          <p class="lab-entry-wrap">
-            <a class="lab-entry" href="beauty-lab.html">Beauty lab</a>
-          </p>
           <p id="start-status"></p>
         </div>
       </section>

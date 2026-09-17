@@ -5,9 +5,9 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { FINGER_MAP, FINGER_TYPES, PLANT_POOL, pickDropEmoji, BEAUTY_STORAGE_KEY } from "./config.js";
+import { FINGER_MAP, FINGER_TYPES, PLANT_POOL, pickDropEmoji, FILTER_STORAGE_KEY } from "./config.js";
 import { PinchDetector } from "./pinch.js";
-import { readBeautyPref } from "./beauty.js";
+import { readFilterPref, FILTER_IDS } from "./beauty.js";
 import { PRESETS } from "./beauty-lab.js";
 
 let failed = 0;
@@ -102,12 +102,16 @@ assert(!/demo-dock|btn-demo|Demo mode|Demo sow/i.test(html), "HTML has no demo U
 assert(!/#demo-dock|has-demo-dock|demo-stage/.test(css), "CSS has no demo chrome");
 assert(!/btn-demo|DemoHands|startDemo|isDemoQuery/.test(app), "app.js has no demo entry");
 assert(!/demo\.js/.test(html), "demo.js is not loaded");
-assert(/btn-beauty/.test(html) && /id="beauty"/.test(html), "beauty toggle + canvas exist");
-assert(BEAUTY_STORAGE_KEY === "finger-garden-beauty", "beauty storage key");
-assert(readBeautyPref() === true, "beauty defaults on without stored pref");
+assert(/btn-filter/.test(html) && /id="beauty"/.test(html), "filter dropdown + canvas exist");
+assert(/data-filter="lcd"/.test(html) && /data-filter="raw"/.test(html), "Raw and LCD options");
+assert(/data-filter="natural"/.test(html), "Soft Natural option");
+assert(!/lab-entry/.test(html) && !/Beauty lab/.test(html), "landing has no Beauty lab entry");
+assert(FILTER_STORAGE_KEY === "finger-garden-filter", "filter storage key");
+assert(readFilterPref() === "lcd", "filter defaults to LCD without stored pref");
+assert(FILTER_IDS.join(",") === "raw,natural,lcd", "three garden looks");
 const beautySrc = readFileSync(join(root, "js/beauty.js"), "utf8");
-assert(/softLight/.test(beautySrc) && /u_smooth/.test(beautySrc), "beauty shader has smooth + soft-light");
-assert(/setEnabled/.test(beautySrc), "beauty can be toggled off");
+assert(/bayer4/.test(beautySrc) && /LCD_FRAG/.test(beautySrc), "LCD Bayer dot-matrix shader");
+assert(/setMode/.test(beautySrc), "looks can switch including raw");
 
 const labHtml = readFileSync(join(root, "beauty-lab.html"), "utf8");
 assert(!/Demo mode|Demo sow|btn-demo/i.test(labHtml), "lab has no demo UI");
@@ -120,7 +124,6 @@ assert(names.includes("Cool Clean"), "Cool Clean");
 assert(names.includes("Cream Soft"), "Cream Soft");
 assert(names.includes("Film Soft"), "Film Soft");
 assert(PRESETS.length === 6, "six lab looks including raw");
-assert(/lab-entry/.test(html) && /beauty-lab.html/.test(html), "landing links to Beauty lab");
 
 if (failed) {
   console.error(`\n${failed} check(s) failed`);

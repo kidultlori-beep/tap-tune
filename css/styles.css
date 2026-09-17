@@ -242,37 +242,83 @@ body {
 
 .hud-left {
   flex: 1 1 auto;
+  position: relative;
 }
 
 .hud-actions {
   flex: 0 0 auto;
 }
 
-.beauty-toggle {
+.filter-menu {
+  position: relative;
+  pointer-events: auto;
+  z-index: 9;
+}
+
+.filter-toggle {
   cursor: pointer;
   appearance: none;
   font: inherit;
   font-size: 13px;
   font-weight: 600;
-  padding: 8px 12px;
+  padding: 8px 10px 8px 12px;
   white-space: nowrap;
+  max-width: 132px;
 }
 
-.beauty-toggle.is-on {
-  background: rgba(255, 236, 200, 0.92);
-  border-color: rgba(240, 196, 120, 0.95);
+.filter-caret {
+  font-size: 11px;
+  opacity: 0.7;
 }
 
-.beauty-toggle.is-off {
-  opacity: 0.78;
+.filter-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 148px;
+  padding: 6px;
+  border-radius: 16px;
+  background: var(--glass);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 10;
+}
+
+.filter-list[hidden] {
+  display: none;
+}
+
+.filter-list button {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  min-height: 40px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.filter-list button.is-on,
+.filter-list button:active {
+  background: rgba(255, 255, 255, 0.55);
 }
 
 @media (max-width: 360px) {
-  .beauty-label {
-    display: none;
-  }
-  .beauty-toggle {
-    padding: 8px 10px;
+  .filter-toggle {
+    padding: 8px 8px 8px 10px;
+    font-size: 12px;
+    max-width: 108px;
   }
 }
 
@@ -442,18 +488,6 @@ button.primary:disabled {
 button.retry {
   background: #f4b8c8;
   color: #4a3038;
-}
-
-.lab-entry-wrap {
-  margin: 14px 0 0;
-}
-
-.lab-entry {
-  color: #4b5d4e;
-  font-size: 13px;
-  font-weight: 700;
-  text-decoration: underline;
-  text-underline-offset: 3px;
 }
 
 #start-status {

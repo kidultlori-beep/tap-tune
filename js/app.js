@@ -11,7 +11,13 @@ import { PinchDetector } from "./pinch.js";
 import { Garden } from "./garden.js";
 import { Overlays } from "./overlays.js";
 import { HandsTracker, hasWebGL } from "./hands-tracker.js";
-import { BeautyFilter, readBeautyPref, writeBeautyPref } from "./beauty.js";
+import {
+  CameraFilter,
+  readFilterPref,
+  writeFilterPref,
+  filterShort,
+  filterLabel,
+} from "./beauty.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -30,7 +36,10 @@ const ui = {
   fallback: $("fallback-copy"),
   hud: $("hud"),
   bloomCount: $("bloom-count"),
-  btnBeauty: $("btn-beauty"),
+  filterMenu: $("filter-menu"),
+  btnFilter: $("btn-filter"),
+  filterLabel: $("filter-label"),
+  filterList: $("filter-list"),
   beautyCanvas: $("beauty"),
   btnMute: $("btn-mute"),
   btnFlip: $("btn-flip"),
@@ -48,7 +57,7 @@ const pinch = new PinchDetector();
 
 let camera = null;
 let tracker = null;
-let beauty = null;
+let looks = null;
 let mode = "idle"; // idle | live
 let lastHands = [];
 let lastT = performance.now();
@@ -87,14 +96,31 @@ function layout() {
   const w = window.innerWidth;
   const h = window.innerHeight;
   garden.resize(w, h, 52);
-  beauty?.resize();
+  looks?.resize();
 }
 
-function setBeautyUi(on) {
-  ui.btnBeauty.classList.toggle("is-on", on);
-  ui.btnBeauty.classList.toggle("is-off", !on);
-  ui.btnBeauty.setAttribute("aria-pressed", on ? "true" : "false");
-  ui.btnBeauty.setAttribute("aria-label", on ? "Beauty filter on" : "Beauty filter off");
+function closeFilterMenu() {
+  ui.filterList.hidden = true;
+  ui.btnFilter.setAttribute("aria-expanded", "false");
+}
+
+function syncFilterUi(id) {
+  ui.filterLabel.textContent = filterShort(id);
+  ui.btnFilter.setAttribute("aria-label", `Camera look: ${filterLabel(id)}`);
+  for (const btn of ui.filterList.querySelectorAll("[data-filter]")) {
+    btn.classList.toggle("is-on", btn.dataset.filter === id);
+    btn.setAttribute("aria-selected", btn.dataset.filter === id ? "true" : "false");
+  }
+}
+
+function applyFilter(id, { toastMsg = true } = {}) {
+  if (!looks) return "raw";
+  const next = looks.setMode(id);
+  writeFilterPref(next);
+  syncFilterUi(next);
+  closeFilterMenu();
+  if (toastMsg) toast(filterLabel(next));
+  return next;
 }
 
 function setHudBloom() {
@@ -138,7 +164,7 @@ function frame(now) {
   const dt = Math.min(0.05, (now - lastT) / 1000);
   lastT = now;
 
-  beauty?.draw();
+  looks?.draw();
 
   const sowed = pinch.update(lastHands);
   for (const s of sowed) sowFromPinch(s);
@@ -182,17 +208,15 @@ async function startLive() {
   }
 
   mode = "live";
-  beauty = new BeautyFilter(ui.video, ui.beautyCanvas);
-  const glOk = beauty.init();
+  looks = new CameraFilter(ui.video, ui.beautyCanvas);
+  const glOk = looks.init();
   if (!glOk) {
-    ui.btnBeauty.hidden = true;
-    toast("Beauty filter unavailable — showing the raw camera.");
+    ui.filterMenu.hidden = true;
+    toast("Camera looks unavailable — showing the raw camera.");
   } else {
-    ui.btnBeauty.hidden = false;
-    const on = readBeautyPref();
-    beauty.setEnabled(on);
-    beauty.syncMirror(camera.mirrored);
-    setBeautyUi(on);
+    ui.filterMenu.hidden = false;
+    looks.syncMirror(camera.mirrored);
+    applyFilter(readFilterPref(), { toastMsg: false });
   }
 
   enterGardenChrome();
@@ -253,17 +277,24 @@ function bind() {
     const result = await camera.flip();
     if (result.flipped) {
       syncTrackerMirror();
-      beauty?.syncMirror(camera.mirrored);
+      looks?.syncMirror(camera.mirrored);
     }
   });
 
-  ui.btnBeauty.addEventListener("click", () => {
-    if (!beauty?.available) return;
-    const next = !beauty.enabled;
-    beauty.setEnabled(next);
-    writeBeautyPref(next);
-    setBeautyUi(next);
-    toast(next ? "Beauty on" : "Beauty off · raw camera");
+  ui.btnFilter.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (!looks?.available) return;
+    const open = ui.filterList.hidden;
+    ui.filterList.hidden = !open;
+    ui.btnFilter.setAttribute("aria-expanded", open ? "true" : "false");
+  });
+  ui.filterList.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-filter]");
+    if (!btn) return;
+    applyFilter(btn.dataset.filter);
+  });
+  document.addEventListener("click", (e) => {
+    if (!ui.filterMenu.contains(e.target)) closeFilterMenu();
   });
 
   window.addEventListener("resize", layout);
@@ -272,7 +303,7 @@ function bind() {
   document.addEventListener(
     "touchmove",
     (e) => {
-      if (!e.target.closest("button, a, .start-card")) e.preventDefault();
+      if (!e.target.closest("button, a, .start-card, .filter-menu")) e.preventDefault();
     },
     { passive: false }
   );
@@ -286,8 +317,8 @@ function bind() {
     get bloomCount() {
       return garden.bloomCount;
     },
-    get beautyOn() {
-      return !!beauty?.enabled;
+    get filter() {
+      return looks?.mode || "raw";
     },
   };
 }

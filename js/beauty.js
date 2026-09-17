@@ -1,10 +1,46 @@
 /**
- * Full-frame lightweight WebGL beauty pass (no face mesh, no paid SDKs).
- * ON: separable blur + edge-preserving mix, then soft-light / warmth.
- * OFF: no GL work — raw <video> is shown.
+ * Live camera looks for Finger Garden.
+ * raw — no GL. natural — restrained soft beauty. lcd — monochrome dot-matrix.
  */
 
-import { BEAUTY_STORAGE_KEY } from "./config.js";
+import { FILTER_STORAGE_KEY, BEAUTY_STORAGE_KEY } from "./config.js";
+
+export const FILTERS = [
+  { id: "raw", label: "Off / Raw", short: "Raw" },
+  { id: "natural", label: "Soft Natural", short: "Soft" },
+  { id: "lcd", label: "LCD", short: "LCD" },
+];
+
+export const FILTER_IDS = FILTERS.map((f) => f.id);
+
+export function filterLabel(id) {
+  return FILTERS.find((f) => f.id === id)?.label || "Off / Raw";
+}
+
+export function filterShort(id) {
+  return FILTERS.find((f) => f.id === id)?.short || "Raw";
+}
+
+export function readFilterPref() {
+  try {
+    const v = localStorage.getItem(FILTER_STORAGE_KEY);
+    if (FILTER_IDS.includes(v)) return v;
+    const old = localStorage.getItem(BEAUTY_STORAGE_KEY);
+    if (old === "0") return "raw";
+    if (old === "1") return "natural";
+  } catch {
+    /* private mode */
+  }
+  return "lcd";
+}
+
+export function writeFilterPref(id) {
+  try {
+    localStorage.setItem(FILTER_STORAGE_KEY, FILTER_IDS.includes(id) ? id : "raw");
+  } catch {
+    /* ignore */
+  }
+}
 
 const VERT = `
 attribute vec2 a_pos;
@@ -40,57 +76,84 @@ void main() {
 }
 `;
 
-const GRADE_FRAG = `
+/** Restrained Soft Natural — not the old milky/orange pass. */
+const NATURAL_FRAG = `
 precision mediump float;
 uniform sampler2D u_src;
 uniform sampler2D u_blur;
-uniform float u_smooth;
-uniform float u_bright;
-uniform float u_warm;
 varying vec2 v_uv;
-
-vec3 softLight(vec3 base, vec3 blend) {
-  vec3 lo = 2.0 * base * blend + base * base * (1.0 - 2.0 * blend);
-  vec3 hi = sqrt(max(base, 0.0)) * (2.0 * blend - 1.0) + 2.0 * base * (1.0 - blend);
-  return mix(lo, hi, step(0.5, blend));
-}
 
 void main() {
   vec3 src = texture2D(u_src, v_uv).rgb;
-  vec3 blur = texture2D(u_blur, v_uv).rgb;
-  float delta = length(src - blur);
-  float edge = smoothstep(0.03, 0.16, delta);
-  vec3 surface = mix(blur, src, edge);
-  vec3 color = mix(src, surface, u_smooth);
-  color *= 1.0 + u_bright;
-  color += vec3(u_bright * 0.12, u_bright * 0.08, u_bright * 0.04);
-  color.r += u_warm * 0.72;
-  color.g += u_warm * 0.22;
-  color.b -= u_warm * 0.28;
-  vec3 lift = vec3(0.70, 0.60, 0.52);
-  color = mix(color, softLight(clamp(color, 0.0, 1.0), lift), 0.42);
+  vec3 bl = texture2D(u_blur, v_uv).rgb;
+  float delta = length(src - bl);
+  float edge = smoothstep(0.028, 0.14, delta);
+  vec3 surface = mix(bl, src, edge);
+  vec3 color = mix(src, surface, 0.16);
+  color *= 1.03;
+  color += vec3(0.012, 0.01, 0.006);
+  color.r += 0.01;
+  color.b -= 0.006;
   gl_FragColor = vec4(clamp(color, 0.0, 1.0), 1.0);
 }
 `;
 
-export function readBeautyPref() {
-  try {
-    const v = localStorage.getItem(BEAUTY_STORAGE_KEY);
-    if (v === "0") return false;
-    if (v === "1") return true;
-  } catch {
-    /* private mode */
-  }
-  return true;
+/**
+ * Monochrome dot-matrix LCD: Bayer dither, visible pixel grid, gray-green phosphor.
+ * Faces stay readable via 4 luminance steps rather than a single harsh cutoff.
+ */
+const LCD_FRAG = `
+precision mediump float;
+uniform sampler2D u_src;
+uniform vec2 u_px;
+uniform float u_cell;
+varying vec2 v_uv;
+
+float luma(vec3 c) {
+  return dot(c, vec3(0.299, 0.587, 0.114));
 }
 
-export function writeBeautyPref(on) {
-  try {
-    localStorage.setItem(BEAUTY_STORAGE_KEY, on ? "1" : "0");
-  } catch {
-    /* ignore */
-  }
+float bayer4(vec2 p) {
+  vec2 i = mod(floor(p), 4.0);
+  vec4 r0 = vec4(0.0, 8.0, 2.0, 10.0);
+  vec4 r1 = vec4(12.0, 4.0, 14.0, 6.0);
+  vec4 r2 = vec4(3.0, 11.0, 1.0, 9.0);
+  vec4 r3 = vec4(15.0, 7.0, 13.0, 5.0);
+  vec4 row = r0;
+  if (i.y > 0.5) row = r1;
+  if (i.y > 1.5) row = r2;
+  if (i.y > 2.5) row = r3;
+  float col = row.x;
+  if (i.x > 0.5) col = row.y;
+  if (i.x > 1.5) col = row.z;
+  if (i.x > 2.5) col = row.w;
+  return col / 16.0;
 }
+
+void main() {
+  vec2 px = v_uv * u_px;
+  float cell = max(u_cell, 3.0);
+  vec2 id = floor(px / cell);
+  vec2 local = fract(px / cell);
+  vec2 uvCell = (id + 0.5) * cell / u_px;
+  float g = luma(texture2D(u_src, uvCell).rgb);
+  g = clamp((g - 0.08) * 1.22, 0.0, 1.0);
+  float dith = bayer4(id);
+  float q = clamp(g + (dith - 0.5) * 0.22, 0.0, 1.0);
+  float stepped = floor(q * 3.0 + 0.5) / 3.0;
+
+  vec3 phosphor = vec3(0.70, 0.80, 0.52);
+  vec3 plate = vec3(0.10, 0.14, 0.09);
+  vec3 color = mix(plate, phosphor, stepped);
+
+  float gap = 0.14;
+  float grid = 1.0;
+  if (local.x < gap || local.y < gap) grid = 0.42;
+  color *= grid;
+
+  gl_FragColor = vec4(color, 1.0);
+}
+`;
 
 function compile(gl, type, src) {
   const sh = gl.createShader(type);
@@ -159,22 +222,31 @@ function processSize(vw, vh) {
   };
 }
 
-export class BeautyFilter {
+export class CameraFilter {
   constructor(video, canvas) {
     this.video = video;
     this.canvas = canvas;
     this.gl = null;
     this.available = false;
-    this.enabled = false;
+    this.mode = "raw";
     this._copy = null;
     this._blur = null;
-    this._grade = null;
+    this._natural = null;
+    this._lcd = null;
     this._videoTex = null;
     this._fboA = null;
     this._fboB = null;
     this._buf = null;
     this._proc = { w: 0, h: 0 };
     this._view = { w: 0, h: 0 };
+  }
+
+  get enabled() {
+    return this.usingFx();
+  }
+
+  usingFx() {
+    return this.available && this.mode !== "raw";
   }
 
   init() {
@@ -198,7 +270,8 @@ export class BeautyFilter {
 
       this._copy = this._build(COPY_FRAG, ["u_tex"]);
       this._blur = this._build(BLUR_FRAG, ["u_tex", "u_dir"]);
-      this._grade = this._build(GRADE_FRAG, ["u_src", "u_blur", "u_smooth", "u_bright", "u_warm"]);
+      this._natural = this._build(NATURAL_FRAG, ["u_src", "u_blur"]);
+      this._lcd = this._build(LCD_FRAG, ["u_src", "u_px", "u_cell"]);
 
       const buf = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, buf);
@@ -215,7 +288,7 @@ export class BeautyFilter {
       this.canvas.hidden = true;
       return true;
     } catch (err) {
-      console.warn("beauty init", err);
+      console.warn("filter init", err);
       this._fail();
       return false;
     }
@@ -231,22 +304,32 @@ export class BeautyFilter {
 
   _fail() {
     this.available = false;
-    this.enabled = false;
+    this.mode = "raw";
     this.canvas.hidden = true;
     this.video.classList.remove("has-beauty");
   }
 
-  setEnabled(on) {
-    if (!this.available) {
-      this.enabled = false;
-      this.canvas.hidden = true;
-      this.video.classList.remove("has-beauty");
-      return false;
+  setMode(id) {
+    const next = FILTER_IDS.includes(id) ? id : "raw";
+    if (!this.available && next !== "raw") {
+      this.mode = "raw";
+      this._showRaw();
+      return "raw";
     }
-    this.enabled = !!on;
-    this.canvas.hidden = !this.enabled;
-    this.video.classList.toggle("has-beauty", this.enabled);
-    return this.enabled;
+    this.mode = next;
+    if (this.mode === "raw") this._showRaw();
+    else this._showFx();
+    return this.mode;
+  }
+
+  _showRaw() {
+    this.canvas.hidden = true;
+    this.video.classList.remove("has-beauty");
+  }
+
+  _showFx() {
+    this.canvas.hidden = false;
+    this.video.classList.add("has-beauty");
   }
 
   syncMirror(mirrored) {
@@ -299,24 +382,41 @@ export class BeautyFilter {
     gl.drawArrays(gl.TRIANGLES, 0, 6);
   }
 
-  draw() {
-    if (!this.enabled || !this.available || !this.gl) return;
+  _letterbox() {
     const video = this.video;
-    if (video.readyState < 2 || !video.videoWidth) return;
+    const vw = video.videoWidth;
+    const vh = video.videoHeight;
+    const scale = Math.min(this._view.w / vw, this._view.h / vh);
+    const dw = vw * scale;
+    const dh = vh * scale;
+    return {
+      dw,
+      dh,
+      dx: (this._view.w - dw) / 2,
+      dy: (this._view.h - dh) / 2,
+    };
+  }
 
+  _upload() {
     const gl = this.gl;
-    this.resize();
-    this._ensureProcess(video.videoWidth, video.videoHeight);
-
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
     gl.bindTexture(gl.TEXTURE_2D, this._videoTex);
-    try {
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
-    } catch (err) {
-      console.warn("beauty tex", err);
-      return;
-    }
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.video);
+  }
 
+  _beginScreen(box) {
+    const gl = this.gl;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.viewport(0, 0, this._view.w, this._view.h);
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.viewport(box.dx, box.dy, box.dw, box.dh);
+  }
+
+  drawNatural() {
+    const gl = this.gl;
+    const video = this.video;
+    this._ensureProcess(video.videoWidth, video.videoHeight);
     const { w: pw, h: ph } = this._proc;
 
     this._quad(this._copy);
@@ -327,39 +427,57 @@ export class BeautyFilter {
 
     this._quad(this._blur);
     gl.uniform1i(this._blur.u_tex, 0);
-    for (let i = 0; i < 2; i++) {
-      gl.bindTexture(gl.TEXTURE_2D, this._fboA.tex);
-      gl.uniform2f(this._blur.u_dir, 1 / pw, 0);
-      this._drawTo(this._fboB.fbo, pw, ph);
-      gl.bindTexture(gl.TEXTURE_2D, this._fboB.tex);
-      gl.uniform2f(this._blur.u_dir, 0, 1 / ph);
-      this._drawTo(this._fboA.fbo, pw, ph);
-    }
+    gl.bindTexture(gl.TEXTURE_2D, this._fboA.tex);
+    gl.uniform2f(this._blur.u_dir, 1 / pw, 0);
+    this._drawTo(this._fboB.fbo, pw, ph);
+    gl.bindTexture(gl.TEXTURE_2D, this._fboB.tex);
+    gl.uniform2f(this._blur.u_dir, 0, 1 / ph);
+    this._drawTo(this._fboA.fbo, pw, ph);
 
-    const vw = video.videoWidth;
-    const vh = video.videoHeight;
-    const scale = Math.min(this._view.w / vw, this._view.h / vh);
-    const dw = vw * scale;
-    const dh = vh * scale;
-    const dx = (this._view.w - dw) / 2;
-    const dy = (this._view.h - dh) / 2;
-
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    gl.viewport(0, 0, this._view.w, this._view.h);
-    gl.clearColor(0, 0, 0, 0);
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    gl.viewport(dx, dy, dw, dh);
-
-    this._quad(this._grade);
+    const box = this._letterbox();
+    this._beginScreen(box);
+    this._quad(this._natural);
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this._videoTex);
-    gl.uniform1i(this._grade.u_src, 0);
+    gl.uniform1i(this._natural.u_src, 0);
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, this._fboA.tex);
-    gl.uniform1i(this._grade.u_blur, 1);
-    gl.uniform1f(this._grade.u_smooth, 0.78);
-    gl.uniform1f(this._grade.u_bright, 0.14);
-    gl.uniform1f(this._grade.u_warm, 0.12);
+    gl.uniform1i(this._natural.u_blur, 1);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
+  }
+
+  drawLcd() {
+    const gl = this.gl;
+    const box = this._letterbox();
+    this._beginScreen(box);
+    this._quad(this._lcd);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, this._videoTex);
+    gl.uniform1i(this._lcd.u_src, 0);
+    gl.uniform2f(this._lcd.u_px, box.dw, box.dh);
+    const cell = Math.max(4, Math.min(7, box.dw / 72));
+    gl.uniform1f(this._lcd.u_cell, cell);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+  }
+
+  draw() {
+    if (!this.usingFx() || !this.gl) {
+      this._showRaw();
+      return;
+    }
+    const video = this.video;
+    if (video.readyState < 2 || !video.videoWidth) return;
+
+    this.resize();
+    try {
+      this._upload();
+    } catch (err) {
+      console.warn("filter tex", err);
+      return;
+    }
+
+    this._showFx();
+    if (this.mode === "lcd") this.drawLcd();
+    else this.drawNatural();
   }
 }

@@ -17,10 +17,6 @@ Pages currently publishes the PR branch `cursor/finger-garden-8e3d`. After this 
 
 Camera access requires HTTPS (or localhost). The Pages URL above is the phone preview.
 
-Temporary look picker (not the garden default):
-
-**https://kidultlori-beep.github.io/tap-tune/beauty-lab.html**
-
 ## Run locally
 
 Camera access needs a [secure context](https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts) (`https://` or `http://localhost`). Opening `index.html` as a `file://` URL will not get a camera.
@@ -36,9 +32,8 @@ Then open http://localhost:8080/
 - Use **HTTPS** (GitHub Pages above, or localhost via USB port-forward).
 - Tap **Enter garden**, allow the camera, pinch thumb to each fingertip.
 - Front camera is mirrored; **🔄** flips to the back camera on phones. On desktop the flip button is a silent no-op.
-- **✨ Beauty** (on by default) is a lightweight on-device WebGL pass: soft-light, warmth, and a cheap skin-smooth blur. Turn it off for the raw camera. Preference is saved. If WebGL is missing, the raw camera is shown.
+- Camera look dropdown (next to Bloom): **Off / Raw**, **Soft Natural**, **LCD** (monochrome dot-matrix). Default **LCD**. Preference is saved. If WebGL is missing, the raw camera is shown.
 - If permission is denied, allow the camera in browser settings and tap **Retry camera**. No native `alert()`.
-- Optional: open **Beauty lab** from the landing page to compare camera looks. The garden filter is unchanged until a look is chosen.
 
 ## CDN libraries
 
@@ -81,8 +76,8 @@ css/styles.css  Garden UI
 js/app.js       Camera-garden orchestration
 js/config.js    Finger map + plant glyph pool
 js/camera.js    getUserMedia, contain-fit, front/back flip
-js/beauty.js    Optional WebGL beauty pass + toggle
-js/beauty-lab.js  Temporary live-camera look picker
+js/beauty.js    Camera looks: raw, Soft Natural, LCD
+js/beauty-lab.js  Hidden/dev look picker (not linked from landing)
 beauty-lab.html Beauty lab preview page
 css/beauty-lab.css  Lab UI
 js/hands-tracker.js  window.Hands loop

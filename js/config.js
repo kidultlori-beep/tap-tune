@@ -137,7 +137,9 @@ export const FINGER_MAP = {
 export const MILESTONE_EVERY = 20;
 export const MAX_PLANTS = 28;
 
-/** localStorage key for the ✨ Beauty HUD toggle. Default ON. */
+/** localStorage key for the garden camera look. */
+export const FILTER_STORAGE_KEY = "finger-garden-filter";
+/** Legacy on/off key — migrated into FILTER_STORAGE_KEY. */
 export const BEAUTY_STORAGE_KEY = "finger-garden-beauty";
 
 export const MEDIAPIPE = {
