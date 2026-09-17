@@ -1,6 +1,7 @@
 /**
  * Live camera looks for Finger Garden.
  * raw — no GL. natural — restrained soft beauty. lcd — monochrome dot-matrix.
+ * film — 90s analog grade. dream — hazy digicam bloom + chromatic aberration.
  */
 
 import { FILTER_STORAGE_KEY, BEAUTY_STORAGE_KEY } from "./config.js";
@@ -9,6 +10,8 @@ export const FILTERS = [
   { id: "raw", label: "Off / Raw", short: "Raw" },
   { id: "natural", label: "Soft Natural", short: "Soft" },
   { id: "lcd", label: "LCD", short: "LCD" },
+  { id: "film", label: "Film", short: "Film" },
+  { id: "dream", label: "Dream", short: "Dream" },
 ];
 
 export const FILTER_IDS = FILTERS.map((f) => f.id);
@@ -155,6 +158,133 @@ void main() {
 }
 `;
 
+/**
+ * Analog Film — 90s selfie: warm orange highlights, teal-lifted shadows,
+ * Pro-Mist bloom, grain, vignette. Contrast-y but blacks stay open.
+ */
+const FILM_FRAG = `
+precision mediump float;
+uniform sampler2D u_src;
+uniform sampler2D u_blur;
+uniform vec2 u_px;
+uniform float u_time;
+varying vec2 v_uv;
+
+float luma(vec3 c) {
+  return dot(c, vec3(0.299, 0.587, 0.114));
+}
+
+float hash(vec2 p) {
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+
+vec3 filmCurve(vec3 x) {
+  vec3 t = clamp(x, 0.0, 1.0);
+  vec3 s = t * t * (3.0 - 2.0 * t);
+  return mix(t, s, 0.46);
+}
+
+void main() {
+  vec3 src = texture2D(u_src, v_uv).rgb;
+  vec3 bl = texture2D(u_blur, v_uv).rgb;
+
+  vec3 color = mix(src, bl, 0.28);
+  float Lbl = luma(bl);
+  float mist = smoothstep(0.48, 0.86, Lbl);
+  color = mix(color, bl * vec3(1.18, 1.04, 0.76), mist * 0.62);
+  color += max(bl - vec3(0.55), vec3(0.0)) * vec3(1.32, 0.88, 0.28) * 1.15;
+
+  color = color * 0.93 + vec3(0.048, 0.052, 0.07);
+  color = filmCurve(color);
+
+  float L = luma(color);
+  vec3 shadowTint = vec3(0.74, 0.94, 1.20);
+  vec3 highTint = vec3(1.26, 1.05, 0.64);
+  color *= mix(shadowTint, highTint, smoothstep(0.16, 0.70, L));
+
+  float warm = smoothstep(0.06, 0.42, color.r - color.b) * smoothstep(0.20, 0.82, L);
+  color.r = min(color.r + warm * 0.12, 1.0);
+  color.g = min(color.g + warm * 0.03, 1.0);
+  color.b = max(color.b - warm * 0.07, 0.0);
+
+  float satL = luma(color);
+  color = mix(vec3(satL), color, 1.14);
+
+  vec2 vc = v_uv - vec2(0.5, 0.47);
+  vc.x *= u_px.x / max(u_px.y, 1.0);
+  float vig = smoothstep(0.26, 1.12, length(vc));
+  color *= 1.0 - vig * 0.34;
+  color = mix(color, color * vec3(1.10, 0.84, 0.58), vig * 0.24);
+
+  vec2 gp = gl_FragCoord.xy + vec2(u_time * 19.0, u_time * 7.0);
+  float n = hash(gp) + hash(gp * 1.73 + 8.2) - 1.0;
+  color += n * 0.058;
+
+  gl_FragColor = vec4(clamp(color, 0.0, 1.0), 1.0);
+}
+`;
+
+/**
+ * Dream Soft — early-2000s digicam / dreamcore: heavy bloom, red-cyan CA,
+ * radial softness, pink-magenta haze, lifted blacks, fine noise.
+ */
+const DREAM_FRAG = `
+precision mediump float;
+uniform sampler2D u_src;
+uniform sampler2D u_blur;
+uniform vec2 u_px;
+uniform float u_time;
+varying vec2 v_uv;
+
+float luma(vec3 c) {
+  return dot(c, vec3(0.299, 0.587, 0.114));
+}
+
+float hash(vec2 p) {
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+
+void main() {
+  vec2 px = vec2(1.0 / max(u_px.x, 1.0), 1.0 / max(u_px.y, 1.0));
+  vec2 fromC = v_uv - vec2(0.5, 0.48);
+  float aspect = u_px.x / max(u_px.y, 1.0);
+  float r = length(fromC * vec2(aspect, 1.0));
+  vec2 dir = fromC / max(length(fromC), 0.0008);
+  vec2 ca = dir * r * 0.022 + vec2(6.0, 0.5) * px;
+
+  vec3 src;
+  src.r = texture2D(u_src, v_uv + ca).r;
+  src.g = texture2D(u_src, v_uv).g;
+  src.b = texture2D(u_src, v_uv - ca).b;
+
+  vec3 bl;
+  bl.r = texture2D(u_blur, v_uv + ca * 0.65).r;
+  bl.g = texture2D(u_blur, v_uv).g;
+  bl.b = texture2D(u_blur, v_uv - ca * 0.65).b;
+
+  float radial = smoothstep(0.06, 0.76, r);
+  vec3 color = mix(src, bl, 0.46 + radial * 0.40);
+  vec3 bleed = max(bl - vec3(0.34), vec3(0.0));
+  color += bleed * vec3(1.10, 0.88, 1.16) * (0.95 + radial * 0.45);
+
+  color = color * 0.80 + vec3(0.145, 0.118, 0.142);
+  float g = luma(color);
+  color = mix(vec3(g), color, 0.88);
+  color = mix(color, vec3(0.52, 0.48, 0.52), 0.10);
+
+  color.r += 0.06;
+  color.g += 0.01;
+  color.b += 0.05;
+  color *= vec3(1.07, 0.94, 1.05);
+
+  vec2 gp = gl_FragCoord.xy + u_time * vec2(23.0, 11.0);
+  float n = hash(gp) * 0.68 + hash(gp * 2.13 + 4.1) * 0.32;
+  color += (n - 0.5) * 0.062;
+
+  gl_FragColor = vec4(clamp(color, 0.0, 1.0), 1.0);
+}
+`;
+
 function compile(gl, type, src) {
   const sh = gl.createShader(type);
   gl.shaderSource(sh, src);
@@ -212,9 +342,9 @@ function makeFbo(gl, w, h) {
   return { fbo, tex, w, h };
 }
 
-function processSize(vw, vh) {
+function processSize(vw, vh, heavy) {
   const mobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-  const maxW = mobile ? 480 : 640;
+  const maxW = heavy ? (mobile ? 352 : 512) : mobile ? 480 : 640;
   const scale = Math.min(1, maxW / Math.max(vw, 1));
   return {
     w: Math.max(2, Math.round((vw * scale) / 2) * 2),
@@ -233,6 +363,8 @@ export class CameraFilter {
     this._blur = null;
     this._natural = null;
     this._lcd = null;
+    this._film = null;
+    this._dream = null;
     this._videoTex = null;
     this._fboA = null;
     this._fboB = null;
@@ -270,8 +402,13 @@ export class CameraFilter {
 
       this._copy = this._build(COPY_FRAG, ["u_tex"]);
       this._blur = this._build(BLUR_FRAG, ["u_tex", "u_dir"]);
-      this._natural = this._build(NATURAL_FRAG, ["u_src", "u_blur"]);
-      this._lcd = this._build(LCD_FRAG, ["u_src", "u_px", "u_cell"]);
+      this._natural = this._tryBuild(NATURAL_FRAG, ["u_src", "u_blur"]);
+      this._lcd = this._tryBuild(LCD_FRAG, ["u_src", "u_px", "u_cell"]);
+      this._film = this._tryBuild(FILM_FRAG, ["u_src", "u_blur", "u_px", "u_time"]);
+      this._dream = this._tryBuild(DREAM_FRAG, ["u_src", "u_blur", "u_px", "u_time"]);
+      if (!this._natural && !this._lcd && !this._film && !this._dream) {
+        throw new Error("no looks");
+      }
 
       const buf = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, buf);
@@ -302,6 +439,25 @@ export class CameraFilter {
     return loc;
   }
 
+  _tryBuild(frag, uniforms) {
+    try {
+      return this._build(frag, uniforms);
+    } catch (err) {
+      console.warn("filter shader", err);
+      return null;
+    }
+  }
+
+  hasMode(id) {
+    if (id === "raw") return true;
+    if (!this.available) return false;
+    if (id === "natural") return !!this._natural;
+    if (id === "lcd") return !!this._lcd;
+    if (id === "film") return !!this._film;
+    if (id === "dream") return !!this._dream;
+    return false;
+  }
+
   _fail() {
     this.available = false;
     this.mode = "raw";
@@ -310,12 +466,8 @@ export class CameraFilter {
   }
 
   setMode(id) {
-    const next = FILTER_IDS.includes(id) ? id : "raw";
-    if (!this.available && next !== "raw") {
-      this.mode = "raw";
-      this._showRaw();
-      return "raw";
-    }
+    let next = FILTER_IDS.includes(id) ? id : "raw";
+    if (!this.hasMode(next)) next = "raw";
     this.mode = next;
     if (this.mode === "raw") this._showRaw();
     else this._showFx();
@@ -350,8 +502,8 @@ export class CameraFilter {
     this._view = { w, h };
   }
 
-  _ensureProcess(vw, vh) {
-    const next = processSize(vw, vh);
+  _ensureProcess(vw, vh, heavy) {
+    const next = processSize(vw, vh, heavy);
     if (this._fboA && this._proc.w === next.w && this._proc.h === next.h) return;
     const gl = this.gl;
     if (this._fboA) {
@@ -414,6 +566,7 @@ export class CameraFilter {
   }
 
   drawNatural() {
+    if (!this._natural) return;
     const gl = this.gl;
     const video = this.video;
     this._ensureProcess(video.videoWidth, video.videoHeight);
@@ -447,6 +600,7 @@ export class CameraFilter {
   }
 
   drawLcd() {
+    if (!this._lcd) return;
     const gl = this.gl;
     const box = this._letterbox();
     this._beginScreen(box);
@@ -458,6 +612,65 @@ export class CameraFilter {
     const cell = Math.max(4, Math.min(7, box.dw / 72));
     gl.uniform1f(this._lcd.u_cell, cell);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
+  }
+
+  _prepareBlur(spreadA, spreadB) {
+    const gl = this.gl;
+    const video = this.video;
+    this._ensureProcess(video.videoWidth, video.videoHeight, true);
+    const { w: pw, h: ph } = this._proc;
+
+    this._quad(this._copy);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, this._videoTex);
+    gl.uniform1i(this._copy.u_tex, 0);
+    this._drawTo(this._fboA.fbo, pw, ph);
+
+    this._quad(this._blur);
+    gl.uniform1i(this._blur.u_tex, 0);
+    gl.bindTexture(gl.TEXTURE_2D, this._fboA.tex);
+    gl.uniform2f(this._blur.u_dir, spreadA / pw, 0);
+    this._drawTo(this._fboB.fbo, pw, ph);
+    gl.bindTexture(gl.TEXTURE_2D, this._fboB.tex);
+    gl.uniform2f(this._blur.u_dir, 0, spreadA / ph);
+    this._drawTo(this._fboA.fbo, pw, ph);
+
+    if (spreadB) {
+      gl.bindTexture(gl.TEXTURE_2D, this._fboA.tex);
+      gl.uniform2f(this._blur.u_dir, spreadB / pw, 0);
+      this._drawTo(this._fboB.fbo, pw, ph);
+      gl.bindTexture(gl.TEXTURE_2D, this._fboB.tex);
+      gl.uniform2f(this._blur.u_dir, 0, spreadB / ph);
+      this._drawTo(this._fboA.fbo, pw, ph);
+    }
+  }
+
+  _drawGrade(prog) {
+    const gl = this.gl;
+    const box = this._letterbox();
+    this._beginScreen(box);
+    this._quad(prog);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, this._videoTex);
+    gl.uniform1i(prog.u_src, 0);
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, this._fboA.tex);
+    gl.uniform1i(prog.u_blur, 1);
+    gl.uniform2f(prog.u_px, box.dw, box.dh);
+    gl.uniform1f(prog.u_time, performance.now() * 0.001);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+  }
+
+  drawFilm() {
+    if (!this._film) return;
+    this._prepareBlur(1.15, 0);
+    this._drawGrade(this._film);
+  }
+
+  drawDream() {
+    if (!this._dream) return;
+    this._prepareBlur(1.6, 2.4);
+    this._drawGrade(this._dream);
   }
 
   draw() {
@@ -478,6 +691,8 @@ export class CameraFilter {
 
     this._showFx();
     if (this.mode === "lcd") this.drawLcd();
+    else if (this.mode === "film") this.drawFilm();
+    else if (this.mode === "dream") this.drawDream();
     else this.drawNatural();
   }
 }

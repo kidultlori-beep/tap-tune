@@ -276,7 +276,10 @@ body {
   top: calc(100% + 6px);
   left: 0;
   min-width: 148px;
-  padding: 6px;
+  max-height: min(280px, calc(100dvh - 72px));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 5px;
   border-radius: 16px;
   background: var(--glass);
   backdrop-filter: blur(14px);
@@ -285,7 +288,7 @@ body {
   box-shadow: var(--shadow);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   z-index: 10;
 }
 
@@ -302,11 +305,16 @@ body {
   font-size: 13px;
   font-weight: 700;
   color: var(--ink);
-  min-height: 40px;
-  padding: 8px 10px;
+  min-height: 36px;
+  padding: 7px 10px;
   border-radius: 12px;
   cursor: pointer;
   touch-action: manipulation;
+}
+
+.filter-list button:disabled {
+  opacity: 0.4;
+  pointer-events: none;
 }
 
 .filter-list button.is-on,

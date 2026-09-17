@@ -105,12 +105,16 @@ assert(!/demo\.js/.test(html), "demo.js is not loaded");
 assert(/btn-filter/.test(html) && /id="beauty"/.test(html), "filter dropdown + canvas exist");
 assert(/data-filter="lcd"/.test(html) && /data-filter="raw"/.test(html), "Raw and LCD options");
 assert(/data-filter="natural"/.test(html), "Soft Natural option");
+assert(/data-filter="film"/.test(html), "Film option");
+assert(/data-filter="dream"/.test(html), "Dream option");
 assert(!/lab-entry/.test(html) && !/Beauty lab/.test(html), "landing has no Beauty lab entry");
 assert(FILTER_STORAGE_KEY === "finger-garden-filter", "filter storage key");
 assert(readFilterPref() === "lcd", "filter defaults to LCD without stored pref");
-assert(FILTER_IDS.join(",") === "raw,natural,lcd", "three garden looks");
+assert(FILTER_IDS.join(",") === "raw,natural,lcd,film,dream", "five garden looks");
 const beautySrc = readFileSync(join(root, "js/beauty.js"), "utf8");
 assert(/bayer4/.test(beautySrc) && /LCD_FRAG/.test(beautySrc), "LCD Bayer dot-matrix shader");
+assert(/FILM_FRAG/.test(beautySrc) && /filmCurve/.test(beautySrc), "Film analog grade shader");
+assert(/DREAM_FRAG/.test(beautySrc) && /vec2 ca/.test(beautySrc), "Dream bloom + chromatic aberration");
 assert(/setMode/.test(beautySrc), "looks can switch including raw");
 
 const labHtml = readFileSync(join(root, "beauty-lab.html"), "utf8");

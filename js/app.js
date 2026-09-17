@@ -108,6 +108,9 @@ function syncFilterUi(id) {
   ui.filterLabel.textContent = filterShort(id);
   ui.btnFilter.setAttribute("aria-label", `Camera look: ${filterLabel(id)}`);
   for (const btn of ui.filterList.querySelectorAll("[data-filter]")) {
+    const ok = !looks || looks.hasMode(btn.dataset.filter);
+    btn.disabled = !ok;
+    btn.setAttribute("aria-disabled", ok ? "false" : "true");
     btn.classList.toggle("is-on", btn.dataset.filter === id);
     btn.setAttribute("aria-selected", btn.dataset.filter === id ? "true" : "false");
   }

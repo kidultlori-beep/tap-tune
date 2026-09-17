@@ -32,7 +32,7 @@ Then open http://localhost:8080/
 - Use **HTTPS** (GitHub Pages above, or localhost via USB port-forward).
 - Tap **Enter garden**, allow the camera, pinch thumb to each fingertip.
 - Front camera is mirrored; **🔄** flips to the back camera on phones. On desktop the flip button is a silent no-op.
-- Camera look dropdown (next to Bloom): **Off / Raw**, **Soft Natural**, **LCD** (monochrome dot-matrix). Default **LCD**. Preference is saved. If WebGL is missing, the raw camera is shown.
+- Camera look dropdown (next to Bloom): **Off / Raw**, **Soft Natural**, **LCD** (monochrome dot-matrix), **Film** (90s analog), **Dream** (hazy digicam). Default **LCD**. Preference is saved. If WebGL is missing, the raw camera is shown.
 - If permission is denied, allow the camera in browser settings and tap **Retry camera**. No native `alert()`.
 
 ## CDN libraries
@@ -76,7 +76,7 @@ css/styles.css  Garden UI
 js/app.js       Camera-garden orchestration
 js/config.js    Finger map + plant glyph pool
 js/camera.js    getUserMedia, contain-fit, front/back flip
-js/beauty.js    Camera looks: raw, Soft Natural, LCD
+js/beauty.js    Camera looks: raw, Soft Natural, LCD, Film, Dream
 js/beauty-lab.js  Hidden/dev look picker (not linked from landing)
 beauty-lab.html Beauty lab preview page
 css/beauty-lab.css  Lab UI
