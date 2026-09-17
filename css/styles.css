@@ -103,15 +103,46 @@ body {
   z-index: 5;
 }
 
-.drop-emoji {
+.plant {
   position: absolute;
   left: 0;
   top: 0;
-  line-height: 1;
-  user-select: none;
+  width: 0;
+  height: 0;
+  overflow: visible;
   pointer-events: none;
-  will-change: transform;
-  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.18));
+  user-select: none;
+  will-change: transform, opacity;
+  transform-origin: 0 0;
+}
+
+.plant-stem {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 3px;
+  height: 0;
+  margin-left: -1.5px;
+  border-radius: 2px;
+  opacity: 0.92;
+}
+
+.plant-head {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  font-size: 28px;
+  line-height: 1;
+  transform: translate(-50%, -78%);
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.16));
+}
+
+.plant-leaf {
+  position: absolute;
+  font-size: 14px;
+  line-height: 1;
+  opacity: 0;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.12));
 }
 
 .fingertip {
@@ -480,4 +511,5 @@ button.retry {
 @media (max-width: 420px) {
   .brand-en { font-size: 34px; }
   .fingertip { font-size: 22px; }
+  .plant-head { font-size: 24px; }
 }

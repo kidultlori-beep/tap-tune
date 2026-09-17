@@ -1,10 +1,9 @@
 /**
- * Node-side sanity checks for mapping + pinch debounce + stacking rest.
+ * Node-side sanity checks for mapping, pinch debounce, and plant pool.
  *   node js/check.js
  */
-import { FINGER_MAP, FINGER_TYPES } from "./config.js";
+import { FINGER_MAP, FINGER_TYPES, PLANT_POOL, pickDropEmoji } from "./config.js";
 import { PinchDetector } from "./pinch.js";
-import { stackRestY } from "./garden.js";
 
 let failed = 0;
 function assert(cond, msg) {
@@ -15,6 +14,26 @@ function assert(cond, msg) {
     console.log("ok ", msg);
   }
 }
+
+const REQUIRED = [
+  "🌺",
+  "🌸",
+  "🌼",
+  "🌻",
+  "🌹",
+  "🪻",
+  "🌷",
+  "🍄‍🟫",
+  "🍄",
+  "🍁",
+  "🍂",
+  "🍀",
+  "☘️",
+  "🌿",
+  "🎄",
+  "🌟",
+  "🫧",
+];
 
 assert(FINGER_TYPES.length === 8, "8 finger types");
 assert(
@@ -31,6 +50,18 @@ assert(FINGER_MAP["Right-index"].freq === 880.0, "Right index A5");
 assert(FINGER_MAP["Right-middle"].freq === 1046.5, "Right middle C6");
 assert(FINGER_MAP["Right-ring"].freq === 1174.66, "Right ring D6");
 assert(FINGER_MAP["Right-pinky"].freq === 1318.51, "Right pinky E6");
+
+for (const g of REQUIRED) {
+  assert(PLANT_POOL.includes(g), `pool includes ${g}`);
+}
+assert(
+  FINGER_TYPES.every((k) => PLANT_POOL.includes(FINGER_MAP[k].emoji)),
+  "fingertip glyphs are in the sowable pool"
+);
+
+const seen = new Set();
+for (let i = 0; i < 80; i++) seen.add(pickDropEmoji());
+assert(seen.size >= 6, "drop picker mixes several pool glyphs");
 
 const d = new PinchDetector();
 const mk = (indexDist) => [
@@ -57,17 +88,6 @@ const released = d.update(mk(80));
 assert(released.length === 0, "release does not sow");
 const again = d.update(mk(8));
 assert(again.length === 1, "new pinch sows again");
-
-const floor = 800;
-const settled = {
-  x: 200,
-  y: 780,
-  r: 16,
-  settled: true,
-};
-const falling = { x: 200, y: 100, r: 16 };
-const rest = stackRestY([settled, falling], falling, floor);
-assert(rest < floor - falling.r, "stack rest is above the floor when a glyph is already there");
 
 if (failed) {
   console.error(`\n${failed} check(s) failed`);

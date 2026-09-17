@@ -45,17 +45,28 @@ export class Overlays {
     }
   }
 
-  /** Tiny rising sparkle — not a particle system. */
+  /** Tiny rising sparkle — emoji only, not a particle system. */
   spawnSparkle(x, y) {
-    if (Math.random() > 0.55) return;
+    this._sparkleAt(x, y, rand(12, 18));
+  }
+
+  /** Burst of ✨ when a plant dissipates. */
+  spawnSparkleBurst(x, y, count = 5) {
+    const n = Math.max(3, count);
+    for (let i = 0; i < n; i++) {
+      this._sparkleAt(x + rand(-28, 28), y + rand(-40, 24), rand(14, 22));
+    }
+  }
+
+  _sparkleAt(x, y, size) {
     const el = document.createElement("div");
     el.className = "float-sparkle";
     el.textContent = "✨";
-    el.style.left = `${x + rand(-10, 10)}px`;
+    el.style.left = `${x}px`;
     el.style.top = `${y}px`;
-    const dur = rand(0.7, 1.15);
+    const dur = rand(0.65, 1.2);
     el.style.animationDuration = `${dur}s`;
-    el.style.fontSize = `${rand(12, 18)}px`;
+    el.style.fontSize = `${size}px`;
     this.notesLayer.appendChild(el);
     const rec = { el, born: performance.now(), life: dur * 1000 };
     this._nodes.push(rec);

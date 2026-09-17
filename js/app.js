@@ -5,7 +5,7 @@
 
 import { FINGER_MAP, FINGER_TYPES, MILESTONE_EVERY } from "./config.js";
 import { GardenAudio } from "./audio.js";
-import { CameraFeed, canSwitchCamera, isDemoQuery } from "./camera.js";
+import { CameraFeed, canSwitchCamera, isDemoQuery, isFastQuery } from "./camera.js";
 import { PinchDetector } from "./pinch.js";
 import { Garden } from "./garden.js";
 import { Overlays } from "./overlays.js";
@@ -111,21 +111,23 @@ function enterGardenChrome({ demoMode = false, keepCamera = false } = {}) {
 function sowFromPinch(event) {
   const spec = FINGER_MAP[event.key];
   if (!spec) return;
-  const plant = garden.sow(event.key, event.x, event.y);
+  const plant = garden.sow(event.key, event.x, event.y, { fast: isFastQuery() });
   audio.playFinger(spec.freq);
-  overlays.spawnSparkle(event.x, event.y);
   return plant;
 }
 
 function handleGardenEvents(events) {
   for (const ev of events) {
-    if (ev.type !== "land") continue;
-    setHudBloom();
-    const reached = Math.floor(garden.bloomCount / MILESTONE_EVERY);
-    if (reached > lastMilestone) {
-      lastMilestone = reached;
-      overlays.milestoneFlyby();
-      toast(`Bloom ${garden.bloomCount} · butterflies pass by`);
+    if (ev.type === "bloom") {
+      setHudBloom();
+      const reached = Math.floor(garden.bloomCount / MILESTONE_EVERY);
+      if (reached > lastMilestone) {
+        lastMilestone = reached;
+        overlays.milestoneFlyby();
+        toast(`Bloom ${garden.bloomCount} · butterflies pass by`);
+      }
+    } else if (ev.type === "fade") {
+      overlays.spawnSparkleBurst(ev.x, ev.y, 5 + Math.floor(Math.random() * 3));
     }
   }
 }

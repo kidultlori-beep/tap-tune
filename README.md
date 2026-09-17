@@ -3,7 +3,7 @@
 Product display name: **Finger Garden**.  
 Repository / code name stays **tap-tune**.
 
-Pinch a thumb to a fingertip. A plant emoji falls with gravity and stacks on the floor. Each of the eight non-thumb fingers plays its own pitch.
+Pinch a thumb to a fingertip. A plant emoji falls, grows a thin pastel stem of random height, then fades with ✨ after a few seconds. Each of the eight non-thumb fingers plays its own pitch.
 
 Pure static site. No React/Vue, no bundler, no build step.
 
@@ -57,12 +57,14 @@ Thumbs have no plant overlay; they are only used for pinch.
 | Left pinky | 🌷 | G5 | 783.99 |
 | Right index | 🌻 | A5 | 880.00 |
 | Right middle | 🌹 | C6 | 1046.50 |
-| Right ring | 🪷 | D6 | 1174.66 |
-| Right pinky | 💮 | E6 | 1318.51 |
+| Right ring | 🪻 | D6 | 1174.66 |
+| Right pinky | 🍀 | E6 | 1318.51 |
 
-Drops are plain plant Unicode (flowers, leaves, sprouts, mushrooms, trees, plus occasional ✨). They fall from the pinch and accumulate on a bottom pile. No stems, no custom flower art, no grainy particle circles.
+Sowable pool (mixed, not flowers-only): 🌺🌸🌼🌻🌹🪻🌷🍄‍🟫🍄🍁🍂🍀☘️🌿🎄🌟🫧
 
-One pinch = one drop; release before sowing again. Each pinch still plays that finger’s pitch.
+Lifecycle: pinch → gravity drop to the floor → grow a **thin pastel stem** of random height with optional 🌿 leaves and one pool emoji on top → stay visible **3–5s** → fade out with ✨ sparkles. No grainy particle fog.
+
+One pinch = one plant; release before sowing again. Each pinch still plays that finger’s pitch.
 
 ## Demo mode
 
@@ -81,7 +83,7 @@ js/config.js    Finger map + plant glyph pool
 js/camera.js    getUserMedia, contain-fit, front/back flip
 js/hands-tracker.js  window.Hands loop
 js/pinch.js     Debounced pinch → sow
-js/garden.js    Gravity drop + floor stack
+js/garden.js    Gravity drop, pastel stem grow, fade
 js/audio.js     Web Audio tones + mute
 js/overlays.js  Fingertip glyphs, ✨, critters
 js/demo.js      Camera-free skeleton

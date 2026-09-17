@@ -17,28 +17,42 @@ export const FINGER_TYPES = HANDS.flatMap((hand) =>
   NON_THUMB_FINGERS.map((finger) => `${hand}-${finger}`)
 );
 
-/** Extra plant glyphs that can drop into the floor pile (plain Unicode only). */
+/**
+ * Sowable plant glyphs (plain Unicode only). Mix — not flowers-only.
+ * 🌺🌸🌼🌻🌹🪻🌷🍄‍🟫🍄🍁🍂🍀☘️🌿🎄🌟🫧
+ */
 export const PLANT_POOL = [
+  "🌺",
   "🌸",
   "🌼",
-  "🌺",
-  "🌷",
   "🌻",
   "🌹",
-  "🪷",
-  "🌱",
-  "🌿",
-  "🍀",
-  "🍃",
-  "🌵",
-  "🌾",
+  "🪻",
+  "🌷",
+  "🍄‍🟫",
   "🍄",
-  "🪴",
-  "🌲",
-  "🌳",
-  "🌴",
-  "🎋",
-  "💮",
+  "🍁",
+  "🍂",
+  "🍀",
+  "☘️",
+  "🌿",
+  "🎄",
+  "🌟",
+  "🫧",
+];
+
+/** Thin pastel stems — not neon, not particle fog. */
+export const STEM_COLORS = [
+  "#f4b4c8",
+  "#f7d58a",
+  "#9ed4b0",
+  "#b7d8f2",
+  "#d7c2f0",
+  "#f3c4a4",
+  "#c5e6a8",
+  "#e8b8d4",
+  "#a8dcd4",
+  "#f0d0a8",
 ];
 
 /**
@@ -52,7 +66,6 @@ export const FINGER_MAP = {
     finger: "index",
     label: "Left index",
     emoji: "🌸",
-    extras: ["🌸", "🌱", "🍀"],
     note: "C5",
     freq: 523.25,
   },
@@ -62,7 +75,6 @@ export const FINGER_MAP = {
     finger: "middle",
     label: "Left middle",
     emoji: "🌼",
-    extras: ["🌼", "🌿", "🌾"],
     note: "D5",
     freq: 587.33,
   },
@@ -72,7 +84,6 @@ export const FINGER_MAP = {
     finger: "ring",
     label: "Left ring",
     emoji: "🌺",
-    extras: ["🌺", "🍄", "🍃"],
     note: "E5",
     freq: 659.25,
   },
@@ -82,7 +93,6 @@ export const FINGER_MAP = {
     finger: "pinky",
     label: "Left pinky",
     emoji: "🌷",
-    extras: ["🌷", "🌵", "🌱"],
     note: "G5",
     freq: 783.99,
   },
@@ -92,7 +102,6 @@ export const FINGER_MAP = {
     finger: "index",
     label: "Right index",
     emoji: "🌻",
-    extras: ["🌻", "🌳", "🌿"],
     note: "A5",
     freq: 880.0,
   },
@@ -102,7 +111,6 @@ export const FINGER_MAP = {
     finger: "middle",
     label: "Right middle",
     emoji: "🌹",
-    extras: ["🌹", "🪴", "🍀"],
     note: "C6",
     freq: 1046.5,
   },
@@ -111,8 +119,7 @@ export const FINGER_MAP = {
     hand: "Right",
     finger: "ring",
     label: "Right ring",
-    emoji: "🪷",
-    extras: ["🪷", "🌲", "🍃"],
+    emoji: "🪻",
     note: "D6",
     freq: 1174.66,
   },
@@ -121,15 +128,14 @@ export const FINGER_MAP = {
     hand: "Right",
     finger: "pinky",
     label: "Right pinky",
-    emoji: "💮",
-    extras: ["💮", "🌴", "🎋"],
+    emoji: "🍀",
     note: "E6",
     freq: 1318.51,
   },
 };
 
 export const MILESTONE_EVERY = 20;
-export const MAX_DROPS = 90;
+export const MAX_PLANTS = 28;
 
 export const MEDIAPIPE = {
   handsVersion: "0.4.1675469240",
@@ -163,14 +169,15 @@ export function dist(ax, ay, bx, by) {
   return Math.hypot(dx, dy);
 }
 
+export function easeOutCubic(t) {
+  return 1 - (1 - t) ** 3;
+}
+
 export function fingerKey(hand, finger) {
   return `${hand}-${finger}`;
 }
 
-/** Primary mapped glyph, a plant cousin, or occasional ✨. */
-export function pickDropEmoji(spec) {
-  if (Math.random() < 0.12) return "✨";
-  if (Math.random() < 0.55) return spec?.emoji || pick(PLANT_POOL);
-  if (spec?.extras?.length) return pick(spec.extras);
+/** Mix from the sowable pool (not flowers-only). */
+export function pickDropEmoji() {
   return pick(PLANT_POOL);
 }
