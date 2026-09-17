@@ -58,16 +58,17 @@ vec3 softLight(vec3 base, vec3 blend) {
 void main() {
   vec3 src = texture2D(u_src, v_uv).rgb;
   vec3 blur = texture2D(u_blur, v_uv).rgb;
-  float edge = clamp(length(src - blur) * 4.0, 0.0, 1.0);
+  float delta = length(src - blur);
+  float edge = smoothstep(0.03, 0.16, delta);
   vec3 surface = mix(blur, src, edge);
   vec3 color = mix(src, surface, u_smooth);
   color *= 1.0 + u_bright;
-  color += u_bright * 0.08;
-  color.r += u_warm * 0.55;
-  color.g += u_warm * 0.18;
-  color.b -= u_warm * 0.22;
-  vec3 lift = vec3(0.64, 0.58, 0.52);
-  color = mix(color, softLight(clamp(color, 0.0, 1.0), lift), 0.32);
+  color += vec3(u_bright * 0.12, u_bright * 0.08, u_bright * 0.04);
+  color.r += u_warm * 0.72;
+  color.g += u_warm * 0.22;
+  color.b -= u_warm * 0.28;
+  vec3 lift = vec3(0.70, 0.60, 0.52);
+  color = mix(color, softLight(clamp(color, 0.0, 1.0), lift), 0.42);
   gl_FragColor = vec4(clamp(color, 0.0, 1.0), 1.0);
 }
 `;
@@ -325,14 +326,15 @@ export class BeautyFilter {
     this._drawTo(this._fboA.fbo, pw, ph);
 
     this._quad(this._blur);
-    gl.bindTexture(gl.TEXTURE_2D, this._fboA.tex);
     gl.uniform1i(this._blur.u_tex, 0);
-    gl.uniform2f(this._blur.u_dir, 1 / pw, 0);
-    this._drawTo(this._fboB.fbo, pw, ph);
-
-    gl.bindTexture(gl.TEXTURE_2D, this._fboB.tex);
-    gl.uniform2f(this._blur.u_dir, 0, 1 / ph);
-    this._drawTo(this._fboA.fbo, pw, ph);
+    for (let i = 0; i < 2; i++) {
+      gl.bindTexture(gl.TEXTURE_2D, this._fboA.tex);
+      gl.uniform2f(this._blur.u_dir, 1 / pw, 0);
+      this._drawTo(this._fboB.fbo, pw, ph);
+      gl.bindTexture(gl.TEXTURE_2D, this._fboB.tex);
+      gl.uniform2f(this._blur.u_dir, 0, 1 / ph);
+      this._drawTo(this._fboA.fbo, pw, ph);
+    }
 
     const vw = video.videoWidth;
     const vh = video.videoHeight;
@@ -355,9 +357,9 @@ export class BeautyFilter {
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, this._fboA.tex);
     gl.uniform1i(this._grade.u_blur, 1);
-    gl.uniform1f(this._grade.u_smooth, 0.55);
-    gl.uniform1f(this._grade.u_bright, 0.1);
-    gl.uniform1f(this._grade.u_warm, 0.08);
+    gl.uniform1f(this._grade.u_smooth, 0.78);
+    gl.uniform1f(this._grade.u_bright, 0.14);
+    gl.uniform1f(this._grade.u_warm, 0.12);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
   }
 }

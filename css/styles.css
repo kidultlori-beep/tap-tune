@@ -258,8 +258,13 @@ body {
   white-space: nowrap;
 }
 
+.beauty-toggle.is-on {
+  background: rgba(255, 236, 200, 0.92);
+  border-color: rgba(240, 196, 120, 0.95);
+}
+
 .beauty-toggle.is-off {
-  opacity: 0.72;
+  opacity: 0.78;
 }
 
 @media (max-width: 360px) {
