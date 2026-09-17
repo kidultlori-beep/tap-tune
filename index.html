@@ -43,6 +43,7 @@
     <div id="app">
       <div id="stage">
         <video id="camera" class="is-front" autoplay muted playsinline webkit-playsinline></video>
+        <canvas id="beauty" hidden></canvas>
         <div id="pile-layer"></div>
         <div id="emoji-layer"></div>
         <div id="notes-layer"></div>
@@ -50,7 +51,18 @@
       </div>
 
       <header id="hud" hidden>
-        <div class="pill" aria-live="polite">Bloom <strong id="bloom-count">0</strong></div>
+        <div class="hud-left">
+          <div class="pill" aria-live="polite">Bloom <strong id="bloom-count">0</strong></div>
+          <button
+            id="btn-beauty"
+            class="pill beauty-toggle is-on"
+            type="button"
+            aria-pressed="true"
+            aria-label="Beauty filter on"
+          >
+            ✨ <span class="beauty-label">Beauty</span>
+          </button>
+        </div>
         <div class="hud-actions">
           <button id="btn-flip" class="icon-btn" type="button" aria-label="Flip camera">🔄</button>
           <button id="btn-mute" class="icon-btn" type="button" aria-label="Mute">🔊</button>

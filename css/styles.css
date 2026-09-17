@@ -65,9 +65,28 @@ body {
   transform: none;
 }
 
-#camera.is-off {
+#camera.is-off,
+#camera.has-beauty {
   opacity: 0;
   pointer-events: none;
+}
+
+#beauty {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  background: transparent;
+}
+
+#beauty.is-front {
+  transform: scaleX(-1);
+}
+
+#beauty.is-back {
+  transform: none;
 }
 
 #pile-layer,
@@ -212,10 +231,44 @@ body {
   pointer-events: none;
 }
 
+.hud-left,
 .hud-actions {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: 6px;
   pointer-events: none;
+  min-width: 0;
+}
+
+.hud-left {
+  flex: 1 1 auto;
+}
+
+.hud-actions {
+  flex: 0 0 auto;
+}
+
+.beauty-toggle {
+  cursor: pointer;
+  appearance: none;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 12px;
+  white-space: nowrap;
+}
+
+.beauty-toggle.is-off {
+  opacity: 0.72;
+}
+
+@media (max-width: 360px) {
+  .beauty-label {
+    display: none;
+  }
+  .beauty-toggle {
+    padding: 8px 10px;
+  }
 }
 
 .pill {

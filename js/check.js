@@ -5,8 +5,9 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { FINGER_MAP, FINGER_TYPES, PLANT_POOL, pickDropEmoji } from "./config.js";
+import { FINGER_MAP, FINGER_TYPES, PLANT_POOL, pickDropEmoji, BEAUTY_STORAGE_KEY } from "./config.js";
 import { PinchDetector } from "./pinch.js";
+import { readBeautyPref } from "./beauty.js";
 
 let failed = 0;
 function assert(cond, msg) {
@@ -100,6 +101,12 @@ assert(!/demo-dock|btn-demo|Demo mode|Demo sow/i.test(html), "HTML has no demo U
 assert(!/#demo-dock|has-demo-dock|demo-stage/.test(css), "CSS has no demo chrome");
 assert(!/btn-demo|DemoHands|startDemo|isDemoQuery/.test(app), "app.js has no demo entry");
 assert(!/demo\.js/.test(html), "demo.js is not loaded");
+assert(/btn-beauty/.test(html) && /id="beauty"/.test(html), "beauty toggle + canvas exist");
+assert(BEAUTY_STORAGE_KEY === "finger-garden-beauty", "beauty storage key");
+assert(readBeautyPref() === true, "beauty defaults on without stored pref");
+const beautySrc = readFileSync(join(root, "js/beauty.js"), "utf8");
+assert(/softLight/.test(beautySrc) && /u_smooth/.test(beautySrc), "beauty shader has smooth + soft-light");
+assert(/setEnabled/.test(beautySrc), "beauty can be toggled off");
 
 if (failed) {
   console.error(`\n${failed} check(s) failed`);

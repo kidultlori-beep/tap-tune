@@ -32,6 +32,7 @@ Then open http://localhost:8080/
 - Use **HTTPS** (GitHub Pages above, or localhost via USB port-forward).
 - Tap **Enter garden**, allow the camera, pinch thumb to each fingertip.
 - Front camera is mirrored; **🔄** flips to the back camera on phones. On desktop the flip button is a silent no-op.
+- **✨ Beauty** (on by default) is a lightweight on-device WebGL pass: soft-light, warmth, and a cheap skin-smooth blur. Turn it off for the raw camera. Preference is saved. If WebGL is missing, the raw camera is shown.
 - If permission is denied, allow the camera in browser settings and tap **Retry camera**. No native `alert()`.
 
 ## CDN libraries
@@ -75,6 +76,7 @@ css/styles.css  Garden UI
 js/app.js       Camera-garden orchestration
 js/config.js    Finger map + plant glyph pool
 js/camera.js    getUserMedia, contain-fit, front/back flip
+js/beauty.js    Optional WebGL beauty pass + toggle
 js/hands-tracker.js  window.Hands loop
 js/pinch.js     Debounced pinch → sow
 js/garden.js    Gravity drop, pastel stem grow, fade
